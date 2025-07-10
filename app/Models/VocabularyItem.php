@@ -12,7 +12,7 @@ class VocabularyItem extends Model
 {
     use Completable;
     use HasFactory;
-    protected $fillable = ['vocabulary_id', 'term', 'details', 'order'];
+    protected $fillable = ['vocabulary_id', 'term', 'details', 'media_url', 'order'];
 
     public function vocabulary(): BelongsTo
     {

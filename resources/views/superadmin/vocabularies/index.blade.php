@@ -20,7 +20,7 @@
         isEditMode: false,
         modalTitle: '',
         formAction: '',
-        vocab: { lesson_id: '', category: '', items: [{ term: '', details: '' }] }
+        vocab: { lesson_id: '', category: '', items: [{ term: '', details: '', media_url: null }] }
     }">
         <div class="flex h-screen">
             @include('superadmin.sidebar')
@@ -82,40 +82,57 @@
             <div @click.away="isModalOpen = false" class="bg-white rounded-lg shadow-xl w-full max-w-4xl p-8 m-4 max-h-[90vh] flex flex-col">
                 <h2 class="text-2xl font-bold text-neutral-800 mb-6" x-text="modalTitle"></h2>
 
-                <form :action="formAction" method="POST" class="flex-1 overflow-y-auto pr-2">
+                <form :action="formAction" method="POST" enctype="multipart/form-data" class="flex-1 overflow-y-auto pr-2">
                     @csrf
                     <template x-if="isEditMode">@method('PUT')</template>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label for="lesson_id" class="block text-sm font-medium">Pilih Lesson Induk</label>
-                            <select name="lesson_id" id="lesson_id" x-model="vocab.lesson_id" required class="mt-1 block w-full border-neutral-300 rounded-md shadow-sm">
-                                <option value="">-- Pilih Lesson --</option>
-                                @foreach($lessons as $lesson)<option value="{{ $lesson->id }}">{{ $lesson->title }}</option>@endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label for="category" class="block text-sm font-medium">Nama Kategori</label>
-                            <input type="text" name="category" id="category" x-model="vocab.category" required class="mt-1 block w-full border-neutral-300 rounded-md shadow-sm">
+                    <!-- Bagian Informasi Utama -->
+                    <div class="p-4 bg-neutral-50 rounded-lg border mb-6">
+                        <h3 class="text-lg font-semibold text-neutral-800 mb-4">Informasi Kategori</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="lesson_id" class="block text-sm font-medium text-neutral-700">Pilih Lesson Induk</label>
+                                <select name="lesson_id" id="lesson_id" x-model="vocab.lesson_id" required class="mt-1 block w-full px-3 py-2 border border-neutral-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">-- Pilih Lesson --</option>
+                                    @foreach($lessons as $lesson)<option :value="{{ $lesson->id }}">{{ $lesson->title }}</option>@endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label for="category" class="block text-sm font-medium text-neutral-700">Nama Kategori</label>
+                                <input type="text" name="category" id="category" x-model="vocab.category" required class="mt-1 block w-full px-3 py-2 border border-neutral-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
                         </div>
                     </div>
 
+                    <!-- Bagian Item-item -->
                     <div id="items-container" class="space-y-4">
-                        <h3 class="text-lg font-medium text-neutral-800 border-b pb-2">Item Kosakata</h3>
+                        <h3 class="text-lg font-semibold text-neutral-800 border-b pb-2">Item Kosakata</h3>
                         <template x-for="(item, index) in vocab.items" :key="index">
-                            <div class="flex gap-4 items-center">
-                                <input type="text" :name="`items[${index}][term]`" placeholder="Term" x-model="item.term" required class="flex-1 px-3 py-2 border border-neutral-300 rounded-md">
-                                <input type="text" :name="`items[${index}][details]`" placeholder="Details" x-model="item.details" class="flex-1 px-3 py-2 border border-neutral-300 rounded-md">
-                                <button type="button" @click="vocab.items.splice(index, 1)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                            <div class="item-group grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 border-t pt-4">
+                                <template x-if="isEditMode"><input type="hidden" :name="`items[${index}][id]`" x-model="item.id"></template>
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-700">Term</label>
+                                    <input type="text" :name="`items[${index}][term]`" x-model="item.term" required class="mt-1 w-full px-3 py-2 border border-neutral-300 rounded-md">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-700">Details</label>
+                                    <input type="text" :name="`items[${index}][details]`" x-model="item.details" class="mt-1 w-full px-3 py-2 border border-neutral-300 rounded-md">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-neutral-700">File Audio/Video (Opsional)</label>
+                                    <template x-if="isEditMode && item.media_url">
+                                        <p class="text-xs text-neutral-500 mb-1">File saat ini: <a :href="item.media_url" target="_blank" class="text-indigo-600" x-text="item.media_url.split('/').pop()"></a></p>
+                                    </template>
+                                    <input type="file" :name="`items[${index}][media]`" class="w-full text-sm text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                                    <template x-if="isEditMode && item.media_url"><input type="hidden" :name="`items[${index}][existing_media_url]`" :value="item.media_url"></template>
+                                </div>
+                                <div class="text-right md:col-span-2"><button type="button" @click="vocab.items.splice(index, 1)" class="text-sm font-medium text-red-600 hover:text-red-800">Hapus Item</button></div>
                             </div>
                         </template>
                     </div>
-                    <button type="button" @click="vocab.items.push({term: '', details: ''})" class="mt-4 bg-green-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-green-600"><i class="fas fa-plus mr-2"></i>Tambah Item</button>
+                    <button type="button" @click="vocab.items.push({term: '', details: '', media_url: null})" class="mt-4 bg-green-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-green-600"><i class="fas fa-plus mr-2"></i>Tambah Item</button>
 
-                    <div class="mt-8 border-t pt-5 flex justify-end gap-3">
-                        <button type="button" @click="isModalOpen = false" class="bg-neutral-200 text-neutral-800 py-2 px-6 rounded-lg font-semibold hover:bg-neutral-300">Batal</button>
-                        <button type="submit" class="bg-indigo-600 text-white py-2 px-6 rounded-lg shadow font-semibold hover:bg-indigo-700">Simpan</button>
-                    </div>
+                    <div class="mt-8 border-t pt-5 flex justify-end gap-3"><button type="button" @click="isModalOpen = false" class="bg-neutral-200 py-2 px-6 rounded-lg">Batal</button><button type="submit" class="bg-indigo-600 text-white py-2 px-6 rounded-lg">Simpan</button></div>
                 </form>
             </div>
         </div>

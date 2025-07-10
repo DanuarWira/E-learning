@@ -146,6 +146,10 @@ $allItems = $vocabulary->items;
             detailsElement.textContent = item.details;
             currentItemIndex = index;
 
+            const speakButton = document.createElement('button');
+            speakButton.title = "Dengarkan Pengucapan";
+            speakButton.innerHTML = '<i class="fas fa-volume-up fa-lg"></i>';
+
             if (item.term.includes(' vs. ')) {
                 const words = item.term.split(' vs. ');
                 words.forEach((word, wordIndex) => {
@@ -166,15 +170,15 @@ $allItems = $vocabulary->items;
             } else {
                 const termText = document.createElement('h1');
                 termText.textContent = item.term;
-
-                const speakButton = document.createElement('button');
-                speakButton.title = "Dengarkan Pengucapan";
-                speakButton.classList.add('text-neutral-500', 'hover:text-indigo-600', 'transition-colors', 'ml-2');
-                speakButton.innerHTML = '<i class="fas fa-volume-up fa-lg"></i>'; // Icon lebih kecil
-                speakButton.onclick = () => playAudio(item.term);
-
                 termContainer.appendChild(termText);
+            }
+
+            if (item.media_url) {
+                const audio = new Audio(item.media_url);
+                speakButton.onclick = () => audio.play();
                 termContainer.appendChild(speakButton);
+            } else {
+                // speakButton.onclick = () => playAudio(item.term);
             }
             updateUI();
         }
