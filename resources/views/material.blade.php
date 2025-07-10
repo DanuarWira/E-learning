@@ -101,6 +101,14 @@ $allItems = $material->items;
             footer: document.querySelector('.border-t-2.pt-6.mt-8')
         };
 
+        function playAudio(textToSpeak) {
+            if (!('speechSynthesis' in window) || !textToSpeak) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'en-US';
+            window.speechSynthesis.speak(utterance);
+        }
+
         function renderItem(index) {
             if (index < 0 || index >= allItems.length) return;
 
@@ -111,9 +119,47 @@ $allItems = $material->items;
 
             // Render media berdasarkan tipe
             if (materialType === 'Gambar' && item.url) {
-                ui.media.innerHTML = `<img src="${item.url}" alt="${item.description}" class="max-w-full h-80 rounded-lg shadow-sm mx-auto">`;
+                const container = document.createElement('div');
+                container.className = 'flex flex-col items-center gap-4';
+
+                const image = document.createElement('img');
+                image.src = item.url;
+                image.alt = item.description;
+                image.className = 'max-w-full h-80 rounded-lg shadow-sm';
+
+                const audioButton = document.createElement('button');
+                audioButton.className = 'flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors';
+                audioButton.onclick = () => playAudio(item.title);
+                audioButton.innerHTML = `<i class="fas fa-volume-up"></i><span class="font-semibold">${item.title}</span>`;
+
+                container.appendChild(image);
+                if (item.title) { // Hanya tampilkan tombol jika ada judul
+                    container.appendChild(audioButton);
+                }
+
+                ui.media.appendChild(container);
             } else if (materialType === 'Audio' && item.url) {
                 ui.media.innerHTML = `<audio controls class="w-full"><source src="${item.url}" type="audio/mpeg"></audio>`;
+            } else if (materialType === 'Gambar dengan Audio' && item.url) {
+                const container = document.createElement('div');
+                container.className = 'flex flex-col items-center gap-4';
+
+                const image = document.createElement('img');
+                image.src = item.url;
+                image.alt = item.description;
+                image.className = 'max-w-full h-80 rounded-lg shadow-sm';
+
+                const audioButton = document.createElement('button');
+                audioButton.className = 'flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors';
+                audioButton.onclick = () => playAudio(item.title);
+                audioButton.innerHTML = `<i class="fas fa-volume-up"></i><span class="font-semibold">${item.title}</span>`;
+
+                container.appendChild(image);
+                if (item.title) { // Hanya tampilkan tombol jika ada judul
+                    container.appendChild(audioButton);
+                }
+
+                ui.media.appendChild(container);
             } else if (materialType === 'Video' && item.url) {
                 const youtubeIdMatch = item.url.match(/^(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})(?:\S+)?$/);
                 const youtubeId = youtubeIdMatch ? youtubeIdMatch[1] : null;

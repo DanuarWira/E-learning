@@ -35,6 +35,7 @@ class MaterialController extends Controller
             'items.*.description' => 'required|string',
             'items.*.file' => 'nullable|file|mimes:mp3,wav,jpeg,png,jpg,gif|max:2048',
             'items.*.url' => 'nullable|url',
+            'items.*.title' => 'nullable|string|max:255',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -65,6 +66,7 @@ class MaterialController extends Controller
             'type' => 'required|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',
+            'items.*.title' => 'nullable|string|max:255',
         ]);
 
         DB::transaction(function () use ($request, $material) {
