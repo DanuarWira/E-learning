@@ -118,19 +118,33 @@
                                     <label :for="`item_desc_${index}`" class="block text-sm font-medium">Deskripsi</label>
                                     <textarea :name="`items[${index}][description]`" :id="`item_desc_${index}`" x-model="item.description" required rows="5" class="mt-1 w-full border-neutral-300 border-1 rounded-md"></textarea>
                                 </div>
-                                <div>
-                                    <div x-show="material.type === 'Audio' || material.type === 'Gambar'">
-                                        <label class="block text-sm font-medium">Unggah File</label>
-                                        <template x-if="isEditMode && item.url">
-                                            <p class="text-sm text-neutral-600 mb-2">File saat ini: <a :href="item.url" target="_blank" class="text-indigo-600" x-text="item.url.split('/').pop()"></a></p>
-                                        </template>
-                                        <input type="file" :name="`items[${index}][file]`" class="w-full text-sm text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-violet-50 hover:file:bg-violet-100">
-                                        <template x-if="isEditMode && item.url"><input type="hidden" :name="`items[${index}][existing_url]`" :value="item.url"></template>
-                                    </div>
-                                    <div x-show="material.type === 'Video'">
-                                        <label class="block text-sm font-medium">URL Video</label>
-                                        <input type="url" :name="`items[${index}][url]`" x-model="item.url" placeholder="https://youtube.com/..." class="mt-1 w-full border-neutral-300 rounded-md">
-                                    </div>
+                                <div class="md:col-span-2 space-y-4">
+                                    <template x-if="material.type === 'Gambar'">
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-medium">Unggah Gambar (Wajib)</label>
+                                            <input type="file" :name="`items[${index}][file]`" class="w-full text-sm">
+                                            <label class="block text-sm font-medium mt-2">Unggah Audio (Opsional)</label>
+                                            <input type="file" :name="`items[${index}][audio_file]`" class="w-full text-sm">
+                                        </div>
+                                    </template>
+                                    <template x-if="material.type === 'Teks'">
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-medium">Unggah Audio (Opsional)</label>
+                                            <input type="file" :name="`items[${index}][audio_file]`" class="w-full text-sm">
+                                        </div>
+                                    </template>
+                                    <template x-if="material.type === 'Audio'">
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-medium">Unggah Audio</label>
+                                            <input type="file" :name="`items[${index}][file]`" class="w-full text-sm">
+                                        </div>
+                                    </template>
+                                    <template x-if="material.type === 'Video'">
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-medium">URL Video</label>
+                                            <input type="url" :name="`items[${index}][url]`" x-model="item.url" placeholder="https://youtube.com/..." class="mt-1 w-full border-neutral-300 rounded-md">
+                                        </div>
+                                    </template>
                                 </div>
                                 <div class="text-right md:col-span-2">
                                     <button type="button" @click="material.items.splice(index, 1)" class="text-red-500 hover:text-red-700 text-sm font-medium">Hapus Item Ini</button>

@@ -10,7 +10,7 @@ class MaterialItem extends Model
 {
     use Completable;
     use HasFactory;
-    protected $fillable = ['material_id', 'title', 'description', 'url', 'order'];
+    protected $fillable = ['material_id', 'title', 'description', 'url', 'audio_url', 'order'];
     public function material()
     {
         return $this->belongsTo(Material::class);

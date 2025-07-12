@@ -79,3 +79,7 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
 
     Route::resource('exercises', ExerciseController::class);
 });
+
+Route::get('/cek-phpinfo', function () {
+    phpinfo();
+});

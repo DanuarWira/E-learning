@@ -101,12 +101,14 @@ $allItems = $material->items;
             footer: document.querySelector('.border-t-2.pt-6.mt-8')
         };
 
-        function playAudio(textToSpeak) {
-            if (!('speechSynthesis' in window) || !textToSpeak) return;
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = 'en-US';
-            window.speechSynthesis.speak(utterance);
+        function playMedia(url) {
+            if (isPlaying || !url) return;
+            const audio = new Audio(url);
+            isPlaying = true;
+            audio.play().catch(e => console.error("Gagal memutar audio:", e));
+            audio.onended = () => {
+                isPlaying = false;
+            };
         }
 
         function renderItem(index) {
@@ -128,15 +130,21 @@ $allItems = $material->items;
                 image.className = 'max-w-full h-80 rounded-lg shadow-sm';
 
                 const audioButton = document.createElement('button');
-                audioButton.className = 'flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors';
-                audioButton.onclick = () => playAudio(item.title);
-                audioButton.innerHTML = `<i class="fas fa-volume-up"></i><span class="font-semibold">${item.title}</span>`;
-
-                container.appendChild(image);
-                if (item.title) { // Hanya tampilkan tombol jika ada judul
+                if (item.url) {
+                    const image = document.createElement('img');
+                    image.src = item.url;
+                    image.alt = item.description;
+                    image.className = 'max-w-full h-80 rounded-lg shadow-sm';
+                    container.appendChild(image);
+                }
+                if (item.audio_url) {
+                    const audio = new Audio(item.audio_url);
+                    const audioButton = document.createElement('button');
+                    audioButton.className = 'flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200';
+                    audioButton.onclick = () => audio.play();
+                    audioButton.innerHTML = `<i class="fas fa-volume-up"></i><span class="font-semibold">Dengarkan</span>`;
                     container.appendChild(audioButton);
                 }
-
                 ui.media.appendChild(container);
             } else if (materialType === 'Audio' && item.url) {
                 ui.media.innerHTML = `<audio controls class="w-full"><source src="${item.url}" type="audio/mpeg"></audio>`;
