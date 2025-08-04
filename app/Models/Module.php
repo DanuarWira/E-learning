@@ -48,4 +48,9 @@ class Module extends Model
 
         return round($totalProgress / $lessons->count());
     }
+
+    public function isCompleteFor(User $user): bool
+    {
+        return $this->getProgressForUser($user) >= 100;
+    }
 }

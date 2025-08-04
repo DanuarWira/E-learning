@@ -53,4 +53,9 @@ class Lesson extends Model
 
         return round(($completedItems / $totalItems) * 100);
     }
+
+    public function isCompleteFor(User $user): bool
+    {
+        return $this->getProgressFor($user) >= 100;
+    }
 }

@@ -79,6 +79,18 @@
         <!-- Placeholder untuk konten dasbor -->
         <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse ($modules as $module)
+            @if($module->is_locked)
+            <div class="p-6 bg-neutral-100 border border-neutral-200 rounded-lg shadow-sm flex flex-col justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-neutral-400">{{ $module->title }}</h2>
+                    <p class="mt-2 text-sm text-neutral-400">{{ $module->description }}</p>
+                </div>
+                <div class="mt-4 flex items-center justify-center gap-2 bg-neutral-200 text-neutral-500 text-center py-2 px-4 rounded-lg text-sm font-semibold">
+                    <i class="fas fa-lock"></i>
+                    <span>Terkunci</span>
+                </div>
+            </div>
+            @else
             <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col transform hover:-translate-y-1 transition-transform duration-300">
                 <div class="p-6 flex-grow">
                     <span class="text-sm font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">{{ ucfirst($module->level) }}</span>
@@ -101,6 +113,7 @@
                     <a href="{{ route('modules.show', $module) }}" class="bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition duration-300">Mulai Belajar</a>
                 </div>
             </div>
+            @endif
             @empty
             <!-- Tampilkan pesan ini jika tidak ada modul yang ditemukan -->
             <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12">

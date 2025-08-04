@@ -18,18 +18,18 @@ class DashboardController extends Controller
         $modules = Module::where('is_published', true)
             ->with(['lessons.vocabularies.items', 'lessons.materials.items', 'lessons.exercises']) // Eager load semua yang dibutuhkan
             ->get();
-
+        $previousModuleIsComplete = true;
         // Hitung progress untuk setiap modul
         foreach ($modules as $module) {
-            $lessonProgresses = [];
-            foreach ($module->lessons as $lesson) {
-                $lessonProgresses[] = $lesson->getProgressFor($user);
-            }
+            // Tentukan status terkunci berdasarkan modul sebelumnya
+            $module->is_locked = !$previousModuleIsComplete;
 
-            if (count($lessonProgresses) > 0) {
-                $module->progress = array_sum($lessonProgresses) / count($lessonProgresses);
-            } else {
-                $module->progress = 0;
+            // Hitung progress hanya jika tidak terkunci
+            $module->progress = $module->is_locked ? 0 : $module->getProgressForUser($user);
+
+            // Siapkan status untuk iterasi berikutnya
+            if (!$module->is_locked) {
+                $previousModuleIsComplete = $module->isCompleteFor($user);
             }
         }
 

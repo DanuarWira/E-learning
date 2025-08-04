@@ -81,6 +81,15 @@
             <ul class="divide-y divide-neutral-200">
                 @forelse ($module->lessons as $lesson)
                 <li>
+                    @if($lesson->is_locked)
+                    <!-- Tampilan Kartu Lesson Terkunci -->
+                    <div class="block p-6 bg-white rounded-lg shadow-md opacity-50 cursor-not-allowed">
+                        <div class="flex items-center justify-between">
+                            <p class="text-lg font-semibold text-neutral-400">{{ $lesson->title }}</p>
+                            <i class="fas fa-lock text-neutral-400"></i>
+                        </div>
+                    </div>
+                    @else
                     <a href="{{ route('lessons.show', $lesson) }}" class="block hover:bg-neutral-50 p-6">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-4">
@@ -95,6 +104,7 @@
                             <i class="fas fa-chevron-right text-neutral-400"></i>
                         </div>
                     </a>
+                    @endif
                 </li>
                 @empty
                 <li class="p-6 text-center text-neutral-500">
