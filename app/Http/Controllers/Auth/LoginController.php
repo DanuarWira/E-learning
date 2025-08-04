@@ -34,11 +34,10 @@ class LoginController extends Controller
 
         // 2. Coba untuk mengotentikasi pengguna
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            // Jika berhasil, regenerate session untuk keamanan
             $request->session()->regenerate();
+            $user = Auth::user();
 
-            // === PERUBAHAN UTAMA ADA DI SINI ===
-            // 3. Periksa role pengguna dan arahkan ke dasbor yang sesuai
+            // PERIKSA STATUS ONBOARDING
             $user = Auth::user();
             if ($user->role === 'superadmin') {
                 return redirect()->intended(route('superadmin.dashboard'));
@@ -46,8 +45,11 @@ class LoginController extends Controller
                 return redirect()->intended(route('supervisor.dashboard'));
             }
 
+            if (!$user->has_completed_onboarding) {
+                return redirect()->route('onboarding.show');
+            }
             // Jika role lain, arahkan ke dasbor user biasa
-            return redirect()->intended(route('dashboard'));
+            return redirect()->route('onboarding.show');
         }
 
         // 4. Jika otentikasi gagal

@@ -12,6 +12,8 @@ use App\Http\Controllers\VocabularyController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\ProgressController;
 use App\Http\Controllers\Supervisor\SpvDashboardController;
+use App\Http\Controllers\OnboardingController;
+use App\Http\Middleware\PreventOnboardingAfterCompletion;
 
 Route::get('/', function () {
     return view('welcome');
@@ -20,6 +22,11 @@ Route::get('/', function () {
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+Route::middleware(['auth', PreventOnboardingAfterCompletion::class])->group(function () {
+    Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
+    Route::post('/onboarding', [OnboardingController::class, 'process'])->name('onboarding.process');
+});
 
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
