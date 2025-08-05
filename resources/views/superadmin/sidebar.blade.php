@@ -37,12 +37,12 @@
                     <span>Kelola Material</span>
                 </a>
             </li>
-            <!-- <li>
+            <li>
                 <a href="{{ route('superadmin.exercises.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('superadmin.exercises.*') ? 'bg-indigo-600 text-white font-semibold shadow-md' : 'hover:bg-neutral-100' }} transition-colors">
                     <i class="fas fa-book fa-fw"></i>
                     <span>Kelola Exercise</span>
                 </a>
-            </li> -->
+            </li>
             <!-- Tambahkan link lainnya di sini nanti -->
         </ul>
     </nav>

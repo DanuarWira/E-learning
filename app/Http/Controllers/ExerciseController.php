@@ -43,6 +43,7 @@ class ExerciseController extends Controller
             'content' => 'required|array',
         ]);
 
+        $validated['content'] = $this->sanitizeContent($validated['type'], $validated['content']);
         Exercise::create($validated);
 
         return redirect()->route('superadmin.exercises.index')->with('success', 'Latihan berhasil dibuat.');
@@ -60,6 +61,7 @@ class ExerciseController extends Controller
             'content' => 'required|array',
         ]);
 
+        $validated['content'] = $this->sanitizeContent($validated['type'], $validated['content']);
         $exercise->update($validated);
 
         return redirect()->route('superadmin.exercises.index')->with('success', 'Latihan berhasil diperbarui.');
@@ -72,5 +74,35 @@ class ExerciseController extends Controller
     {
         $exercise->delete();
         return redirect()->route('superadmin.exercises.index')->with('success', 'Latihan berhasil dihapus.');
+    }
+
+    private function sanitizeContent(string $type, array $content): array
+    {
+        switch ($type) {
+            case 'matching_game':
+                return ['pairs' => $content['pairs'] ?? []];
+            case 'spelling_quiz':
+                return ['correct_answer' => $content['correct_answer'] ?? ''];
+            case 'sentence_scramble':
+                return ['sentence' => $content['sentence'] ?? ''];
+            case 'fill_in_the_blank':
+                return [
+                    'sentence_parts' => $content['sentence_parts'] ?? [],
+                    'correct_answer' => $content['correct_answer'] ?? ''
+                ];
+            case 'fill_multiple_blanks':
+                return [
+                    'sentence_parts' => $content['sentence_parts'] ?? [],
+                    'correct_answers' => $content['correct_answers'] ?? []
+                ];
+            case 'multiple_choice_quiz':
+                return [
+                    'question_text' => $content['question_text'] ?? '',
+                    'options' => $content['options'] ?? [],
+                    'correct_answer' => $content['correct_answer'] ?? ''
+                ];
+            default:
+                return [];
+        }
     }
 }

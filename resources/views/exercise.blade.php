@@ -233,6 +233,14 @@
                     });
                 }
             });
+
+            if (currentExerciseIndex === allExercises.length - 1) {
+                ui.nextButton.textContent = 'Selesai';
+                ui.nextButton.classList.add('bg-green-600');
+            } else {
+                ui.nextButton.innerHTML = 'Selanjutnya <i class="fas fa-chevron-right ml-2"></i>';
+                ui.nextButton.classList.remove('bg-green-600');
+            }
         }
 
         function showFeedback(correct, message = '') {
@@ -248,6 +256,23 @@
                 ui.feedbackText.innerHTML = message || 'Coba lagi!';
             }
         }
+
+        ui.nextButton.addEventListener('click', () => {
+            if (currentExerciseIndex < allExercises.length - 1) {
+                currentExerciseIndex++;
+                renderCurrentExercise();
+            } else {
+                // Aksi ketika sesi selesai
+                window.location.href = "{{ route('lessons.show', $lesson) }}";
+            }
+        });
+
+        ui.prevButton.addEventListener('click', () => {
+            if (currentExerciseIndex > 0) {
+                currentExerciseIndex--;
+                renderCurrentExercise();
+            }
+        });
 
         // --- Game Renderers ---
         function renderSpellingQuiz(content) {
@@ -296,6 +321,7 @@
                     const isCorrect = checkAnswer(e.target.dataset.value, content.correct_answer, true);
                     document.querySelectorAll('.option-button').forEach(b => b.disabled = true);
                     e.target.classList.add(isCorrect ? 'correct' : 'incorrect');
+                    showFeedback(isCorrect)
                 });
             });
         }
@@ -692,25 +718,25 @@
         }
 
         // --- Global Event Listeners ---
-        ui.nextButton.addEventListener('click', () => {
-            if (currentExerciseIndex < allExercises.length - 1) {
-                currentExerciseIndex++;
-                renderCurrentExercise();
-            } else {
-                // 1. Kirim semua ID item ke backend untuk dicatat
-                markItemsAsComplete(allItems.map(item => item.id), 'VocabularyItem');
+        // ui.nextButton.addEventListener('click', () => {
+        //     if (currentExerciseIndex < allExercises.length - 1) {
+        //         currentExerciseIndex++;
+        //         renderCurrentExercise();
+        //     } else {
+        //         // 1. Kirim semua ID item ke backend untuk dicatat
+        //         markItemsAsComplete(allItems.map(item => item.id), 'VocabularyItem');
 
-                // 2. Arahkan pengguna kembali ke halaman lesson
-                window.location.href = "{{ route('lessons.show', $lesson) }}";
-            }
-        });
+        //         // 2. Arahkan pengguna kembali ke halaman lesson
+        //         window.location.href = "{{ route('lessons.show', $lesson) }}";
+        //     }
+        // });
 
-        ui.prevButton.addEventListener('click', () => {
-            if (currentExerciseIndex > 0) {
-                currentExerciseIndex--;
-                renderCurrentExercise();
-            }
-        });
+        // ui.prevButton.addEventListener('click', () => {
+        //     if (currentExerciseIndex > 0) {
+        //         currentExerciseIndex--;
+        //         renderCurrentExercise();
+        //     }
+        // });
 
         ui.sideNavItems.forEach(navItem => {
             navItem.addEventListener('click', (e) => {

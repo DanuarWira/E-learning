@@ -72,16 +72,16 @@
                 @endif
 
                 <div class="bg-white rounded-lg shadow-md overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-neutral-500 uppercase">
-                            <tr class="border-b">
+                    <table class="w-full text-sm text-left text-neutral-500">
+                        <thead class="text-xs text-neutral-500 uppercase bg-neutral-50">
+                            <tr>
                                 <th class="px-6 py-3">Judul Latihan</th>
                                 <th class="px-6 py-3">Tipe</th>
                                 <th class="px-6 py-3">Lesson Induk</th>
                                 <th class="px-6 py-3">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y">
+                        <tbody class="divide-y divide-neutral-200">
                             @forelse($exercises as $exercise)
                             <tr>
                                 <td class="px-6 py-4 font-semibold">{{ $exercise->title }}</td>
@@ -156,7 +156,29 @@
                             <div x-show="exercise.type === 'spelling_quiz'" class="space-y-2"><label class="block text-sm">Jawaban Benar</label><input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" class="w-full rounded-md border-1 border-neutral-300"></div>
                             <div x-show="exercise.type === 'sentence_scramble'" class="space-y-2"><label class="block text-sm">Kalimat Benar</label><input type="text" name="content[sentence]" x-model="exercise.content.sentence" class="w-full rounded-md border-1 border-neutral-300"></div>
                             <div x-show="exercise.type === 'fill_in_the_blank'" class="space-y-2"><label class="block text-sm">Template Kalimat (gunakan ___)</label><input type="text" name="content[sentence_template]" x-model="exercise.content.sentence_template" class="w-full rounded-md border-1 border-neutral-300"><label class="block text-sm">Jawaban Benar</label><input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" class="w-full rounded-md"></div>
-                            <div x-show="exercise.type === 'fill_multiple_blanks'" class="space-y-2"><label class="block text-sm">Bagian Kalimat (pisahkan dengan koma)</label><input type="text" name="content[sentence_parts]" :value="exercise.content.sentence_parts?.join(',')" @input="exercise.content.sentence_parts = $event.target.value.split(',').map(s => s.trim())" class="w-full rounded-md border-1 border-neutral-300"><label class="block text-sm">Jawaban Benar (pisahkan dengan koma)</label><input type="text" name="content[correct_answers]" :value="exercise.content.correct_answers?.join(',')" @input="exercise.content.correct_answers = $event.target.value.split(',').map(s => s.trim())" class="w-full rounded-md"></div>
+                            <div x-show="exercise.type === 'fill_multiple_blanks'" class="space-y-4">
+                                <p class="text-sm text-neutral-500">Buat kalimat dengan menambahkan bagian dan jawaban. Contoh: ["Kalimat awal ", " kalimat akhir."], ["jawaban_pertama", "jawaban_kedua"]</p>
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-semibold">Bagian Kalimat</label>
+                                    <template x-for="(part, index) in exercise.content.sentence_parts" :key="index">
+                                        <div class="flex items-center gap-2">
+                                            <input type="text" :name="`content[sentence_parts][${index}]`" x-model="exercise.content.sentence_parts[index]" :placeholder="`Bagian ${index + 1}`" class="flex-1 rounded-md">
+                                            <button type="button" @click="exercise.content.sentence_parts.splice(index, 1)" class="text-red-500">&times;</button>
+                                        </div>
+                                    </template>
+                                    <button type="button" @click="exercise.content.sentence_parts.push('')" class="text-sm text-indigo-600">+ Tambah Bagian Kalimat</button>
+                                </div>
+                                <div class="space-y-2 border-t pt-2">
+                                    <label class="block text-sm font-semibold">Jawaban Benar (sesuai urutan)</label>
+                                    <template x-for="(answer, index) in exercise.content.correct_answers" :key="index">
+                                        <div class="flex items-center gap-2">
+                                            <input type="text" :name="`content[correct_answers][${index}]`" x-model="exercise.content.correct_answers[index]" :placeholder="`Jawaban untuk ___ ke-${index + 1}`" class="flex-1 rounded-md">
+                                            <button type="button" @click="exercise.content.correct_answers.splice(index, 1)" class="text-red-500">&times;</button>
+                                        </div>
+                                    </template>
+                                    <button type="button" @click="exercise.content.correct_answers.push('')" class="text-sm text-indigo-600">+ Tambah Jawaban</button>
+                                </div>
+                            </div>
                             <div x-show="exercise.type === 'multiple_choice_quiz'" class="space-y-2"><label class="block text-sm">Pertanyaan</label><input type="text" name="content[question_text]" x-model="exercise.content.question_text" class="w-full rounded-md"><label class="block text-sm">Pilihan (pisahkan dengan koma)</label><input type="text" name="content[options]" :value="exercise.content.options?.join(',')" @input="exercise.content.options = $event.target.value.split(',').map(s => s.trim())" class="w-full rounded-md border-1 border-neutral-300"><label class="block text-sm">Jawaban Benar</label><input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" class="w-full rounded-md"></div>
                         </div>
                     </div>
