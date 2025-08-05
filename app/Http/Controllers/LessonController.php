@@ -45,8 +45,15 @@ class LessonController extends Controller
 
     public function practiceExercises(Lesson $lesson): View
     {
-        $exercises = $lesson->exercises()->orderBy('order')->get();
-        return view('exercise', compact('lesson', 'exercises'));
+        $exercises = $lesson->exercises()
+            ->with('exerciseable') // <-- Ini adalah baris kunci yang benar
+            ->orderBy('order')
+            ->get();
+
+        return view('exercise', [ // <-- Anda mengembalikan view 'exercise'
+            'lesson' => $lesson,
+            'exercises' => $exercises,
+        ]);
     }
 
     public function index(): View

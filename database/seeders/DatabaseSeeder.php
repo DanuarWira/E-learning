@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         // Panggil seeder spesifik untuk modul
         $this->call([
             VocabularySeeder::class,
-            ExerciseSeeder::class,
+            // ExerciseSeeder::class,
             UserSeeder::class
         ]);
 

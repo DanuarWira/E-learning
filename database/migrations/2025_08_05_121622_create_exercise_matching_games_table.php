@@ -1,0 +1,22 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::create('exercise_matching_games', function (Blueprint $table) {
+            $table->id();
+            $table->text('instruction')->nullable();
+            // Pasangan jawaban disimpan sebagai JSON di sini
+            $table->json('pairs');
+            $table->timestamps();
+        });
+    }
+    public function down(): void
+    {
+        Schema::dropIfExists('exercise_matching_games');
+    }
+};

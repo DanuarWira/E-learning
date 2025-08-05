@@ -4,28 +4,21 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('exercises', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lesson_id')->constrained()->onDelete('cascade');
             $table->string('title');
-            $table->string('type');
-            $table->json('content');
+
+            // Kolom Polymorphic: Ini akan menyimpan ID dan Tipe dari detail latihan
+            $table->morphs('exerciseable'); // Membuat exerciseable_id dan exerciseable_type
 
             $table->integer('order')->default(0);
             $table->timestamps();
         });
     }
-
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('exercises');
