@@ -81,15 +81,18 @@
             color: #3b82f6;
         }
 
-        .category-box {
+        .category-box,
+        .drop-area {
             min-height: 150px;
         }
 
-        .word-draggable {
+        .word-draggable,
+        .step-draggable {
             cursor: grab;
         }
 
-        .word-draggable:active {
+        .word-draggable:active,
+        .step-draggable:active {
             cursor: grabbing;
         }
 
@@ -229,6 +232,15 @@
                     break;
                 case 'sentence_scramble':
                     renderSentenceScramble(content);
+                    break;
+                case 'fill_multiple_blanks':
+                    renderFillMultipleBlanks(content);
+                    break;
+                case 'sequencing':
+                    renderSequencing(content);
+                    break;
+                case 'fill_with_options':
+                    renderFillWithOptions(content);
                     break;
                 default:
                     ui.gameContainer.innerHTML = `<p class="text-center text-red-500">Tipe latihan '${exercise.exerciseable_type}' belum diimplementasikan.</p>`;
@@ -500,6 +512,123 @@
 
             document.querySelectorAll('.word-bank-button').forEach(btn => btn.addEventListener('click', moveWordToAnswer));
             ui.checkButton.onclick = () => checkSentenceScrambleAnswer(content.sentence);
+        }
+
+        function renderFillMultipleBlanks(content) {
+            let sentenceHTML = '';
+            (content.sentence_parts || []).forEach((part, index) => {
+                sentenceHTML += `<span>${part}</span>`;
+                if (index < (content.correct_answers || []).length) {
+                    sentenceHTML += `<input type="text" class="fill-input w-32 mx-2 text-center border-b-2 focus:ring-0 focus:border-indigo-500 bg-transparent">`;
+                }
+            });
+
+            ui.gameContainer.innerHTML = `
+                <div class="text-center">
+                    <p class="text-gray-600 mb-4">Lengkapi kalimat berikut.</p>
+                    <div class="text-xl md:text-2xl bg-white p-6 rounded-lg leading-loose">
+                        ${sentenceHTML}
+                    </div>
+                </div>
+            `;
+            ui.checkButton.onclick = () => checkFillMultipleBlanksAnswer(content.correct_answers);
+        }
+
+        function renderSequencing(content) {
+            const shuffledSteps = [...(content.steps || [])].sort(() => 0.5 - Math.random());
+            ui.gameContainer.innerHTML = `
+                <p class="text-gray-600 mb-4 text-center">Urutkan langkah-langkah berikut.</p>
+                <div id="drop-area" class="drop-area w-full bg-white p-4 rounded-lg border-2 border-dashed space-y-2">
+                    <!-- Drop items here -->
+                </div>
+                <div id="source-area" class="flex flex-wrap gap-3 justify-center mt-8 p-4 bg-gray-100 rounded-lg">
+                    ${shuffledSteps.map((step, index) => `
+                        <div draggable="true" class="step-draggable bg-white p-2 px-4 rounded-lg shadow cursor-grab border" data-step="${step}" data-index="${index}">
+                            ${step}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            const draggables = document.querySelectorAll('.step-draggable');
+            const dropArea = document.getElementById('drop-area');
+            const sourceArea = document.getElementById('source-area');
+
+            draggables.forEach(draggable => {
+                draggable.addEventListener('dragstart', () => draggable.classList.add('opacity-50'));
+                draggable.addEventListener('dragend', () => draggable.classList.remove('opacity-50'));
+            });
+
+            [dropArea, sourceArea].forEach(area => {
+                area.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    area.classList.add('drag-over');
+                });
+                area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+                area.addEventListener('drop', e => {
+                    e.preventDefault();
+                    area.classList.remove('drag-over');
+                    const draggedStep = document.querySelector('.opacity-50');
+                    if (draggedStep && !area.contains(draggedStep)) {
+                        area.appendChild(draggedStep);
+                    }
+                });
+            });
+
+            ui.checkButton.onclick = () => {
+                const userSequence = Array.from(dropArea.children).map(el => el.dataset.step);
+                const isCorrect = JSON.stringify(userSequence) === JSON.stringify(content.steps);
+                showFeedback(isCorrect, `Urutan yang benar: <strong>${content.steps.join(' → ')}</strong>`);
+            };
+        }
+
+        function renderFillWithOptions(content) {
+            ui.checkButton.style.display = 'none'; // Pengecekan instan
+
+            ui.gameContainer.innerHTML = `
+                <div class="text-center">
+                    <p class="text-gray-600 mb-6">Pilih kata yang tepat untuk melengkapi kalimat.</p>
+                    <div class="flex items-center justify-center text-2xl md:text-3xl bg-white p-6 rounded-lg mb-8">
+                        <span>${(content.sentence_parts || [''])[0]}</span>
+                        <span class="text-gray-400 mx-2">_______</span>
+                        <span>${(content.sentence_parts || ['', ''])[1] || ''}</span>
+                    </div>
+                    <div id="options-container" class="flex flex-wrap justify-center gap-3">
+                        ${(content.options || []).map(opt => `<button class="option-button p-4 border-2 rounded-lg text-lg font-semibold" data-value="${opt}">${opt}</button>`).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.querySelectorAll('.option-button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const isCorrect = checkAnswer(e.target.dataset.value, content.correct_answer);
+                    document.querySelectorAll('.option-button').forEach(b => {
+                        b.disabled = true;
+                        if (checkAnswer(b.dataset.value, content.correct_answer)) {
+                            b.classList.add('correct');
+                        }
+                    });
+                    if (!isCorrect) {
+                        e.target.classList.add('incorrect');
+                    }
+                    showFeedback(isCorrect);
+                });
+            });
+        }
+
+        function checkFillMultipleBlanksAnswer(correctAnswers) {
+            const inputs = document.querySelectorAll('.fill-input');
+            let allCorrect = true;
+            inputs.forEach((input, index) => {
+                if (!checkAnswer(input.value, correctAnswers[index])) {
+                    allCorrect = false;
+                    input.classList.add('border-red-500');
+                } else {
+                    input.classList.remove('border-red-500');
+                    input.classList.add('border-green-500');
+                }
+            });
+            showFeedback(allCorrect, `Coba periksa kembali jawaban Anda.`);
         }
 
         function moveWordToAnswer(event) {

@@ -51,25 +51,20 @@
 
         resetContentOnTypeChange() {
             const type = this.exercise.type;
-            if (type === 'matching_game') {
-                this.exercise.content = { instruction: '', pairs: [{item1: '', item2: ''}] };
-            } else if (type === 'multiple_choice_quiz') {
-                this.exercise.content = { question_text: '', options: [''], correct_answer: '' };
-            } else if (type === 'pronunciation_drill') {
-                this.exercise.content = { prompt_text: '' };
-            } else if (type === 'translation_match') {
-                this.exercise.content = { question_word: '', options: [''], correct_answer: '' };
-            } else if (type === 'sound_sorting') {
-                this.exercise.content = { categories: [{name: '', id: ''}], words: [{word: '', category_id: ''}] };
-            } else if (type === 'sentence_scramble') {
-                this.exercise.content = { sentence: '' };
-            }
-            else {
-                this.exercise.content = {};
-            }
+            if (type === 'matching_game') { this.exercise.content = { instruction: '', pairs: [{item1: '', item2: ''}] }; }
+            else if (type === 'multiple_choice_quiz') { this.exercise.content = { question_text: '', options: [''], correct_answer: '' }; }
+            else if (type === 'pronunciation_drill') { this.exercise.content = { prompt_text: '' }; }
+            else if (type === 'translation_match') { this.exercise.content = { question_word: '', options: [''], correct_answer: '' }; }
+            else if (type === 'silent_letter_hunt') { this.exercise.content = { sentence: '', words: [{word: '', silent_letter_index: 0}] }; }
+            else if (type === 'spelling_quiz') { this.exercise.content = { audio_url: '', correct_answer: '' }; }
+            else if (type === 'sound_sorting') { this.exercise.content = { categories: [{name: '', id: ''}], words: [{word: '', category_id: ''}] }; }
+            else if (type === 'sentence_scramble') { this.exercise.content = { sentence: '' }; }
+            else if (type === 'fill_multiple_blanks') { this.exercise.content = { sentence_parts: [''], correct_answers: [''] }; }
+            else if (type === 'sequencing') { this.exercise.content = { steps: [''] }; }
+            else if (type === 'fill_with_options') { this.exercise.content = { sentence_parts: [''], options: [''], correct_answer: '' }; }
+            else { this.exercise.content = {}; }
         },
-
-        aaddItem(key) {
+        addItem(key) {
             if (!this.exercise.content[key]) this.exercise.content[key] = [];
             if (key === 'pairs') { this.exercise.content.pairs.push({item1: '', item2: ''}); }
             else if (key === 'words') { this.exercise.content.words.push({word: '', silent_letter_index: 0}); }
@@ -158,7 +153,7 @@
             <div @click.away="isModalOpen = false" class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-8 m-4 max-h-[90vh] flex flex-col">
                 <h2 class="text-2xl font-bold text-neutral-800 mb-6" x-text="modalTitle"></h2>
 
-                <form :action="formAction" method="POST" class="flex-1 overflow-y-auto pr-2" enctype="multipart/form-data">
+                <form :action="formAction" method="POST" class="flex-1 overflow-y-auto pr-2">
                     @csrf
                     <template x-if=" isEditMode"><input type="hidden" name="_method" value="PUT"></template>
 
@@ -187,6 +182,9 @@
                                 <option value="spelling_quiz">Spelling Quiz</option>
                                 <option value="sound_sorting">Sound Sorting</option>
                                 <option value="sentence_scramble">Sentence Scramble</option>
+                                <option value="fill_multiple_blanks">Fill Multiple Blanks</option>
+                                <option value="sequencing">Sequencing</option>
+                                <option value="fill_with_options">Fill With Options</option>
                             </select>
                         </div>
 
@@ -322,6 +320,70 @@
                                 <div>
                                     <label class="block text-sm font-medium">Kalimat Benar</label>
                                     <textarea name="content[sentence]" x-model="exercise.content.sentence" class="mt-1 block w-full border-neutral-300 rounded-md" placeholder="Hi, welcome to our hotel!"></textarea>
+                                </div>
+                            </div>
+
+                            <div x-show="exercise.type === 'fill_multiple_blanks'" class="space-y-4">
+                                <p class="text-sm text-neutral-500">Buat kalimat dengan bagian dan jawaban. Contoh: ["Yesterday, the guest ", " and ", " a key."], ["arrived", "took"]</p>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Bagian Kalimat</label>
+                                    <template x-for="(part, index) in exercise.content.sentence_parts" :key="index">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <input type="text" :name="`content[sentence_parts][${index}]`" x-model="exercise.content.sentence_parts[index]" :placeholder="`Bagian ${index + 1}`" class="flex-1 rounded-md border-neutral-300">
+                                            <button type="button" @click="removeItem('sentence_parts', index)" class="text-red-500 font-bold">&times;</button>
+                                        </div>
+                                    </template>
+                                    <button type="button" @click="addItem('sentence_parts')" class="text-sm text-indigo-600">+ Tambah Bagian</button>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Jawaban Benar (sesuai urutan)</label>
+                                    <template x-for="(answer, index) in exercise.content.correct_answers" :key="index">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <input type="text" :name="`content[correct_answers][${index}]`" x-model="exercise.content.correct_answers[index]" :placeholder="`Jawaban ke-${index + 1}`" class="flex-1 rounded-md border-neutral-300">
+                                            <button type="button" @click="removeItem('correct_answers', index)" class="text-red-500 font-bold">&times;</button>
+                                        </div>
+                                    </template>
+                                    <button type="button" @click="addItem('correct_answers')" class="text-sm text-indigo-600">+ Tambah Jawaban</button>
+                                </div>
+                            </div>
+
+                            <div x-show="exercise.type === 'sequencing'" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Langkah-langkah (sesuai urutan)</label>
+                                    <template x-for="(step, index) in exercise.content.steps" :key="index">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <input type="text" :name="`content[steps][${index}]`" x-model="exercise.content.steps[index]" :placeholder="`Langkah ${index + 1}`" class="flex-1 rounded-md border-neutral-300">
+                                            <button type="button" @click="removeItem('steps', index)" class="text-red-500 font-bold">&times;</button>
+                                        </div>
+                                    </template>
+                                    <button type="button" @click="addItem('steps')" class="text-sm text-indigo-600">+ Tambah Langkah</button>
+                                </div>
+                            </div>
+
+                            <div x-show="exercise.type === 'fill_with_options'" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Bagian Kalimat (sebelum dan sesudah jawaban)</label>
+                                    <template x-for="(part, index) in exercise.content.sentence_parts" :key="index">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <input type="text" :name="`content[sentence_parts][${index}]`" x-model="exercise.content.sentence_parts[index]" :placeholder="`Bagian ${index + 1}`" class="flex-1 rounded-md border-neutral-300">
+                                            <button type="button" @click="removeItem('sentence_parts', index)" class="text-red-500 font-bold">&times;</button>
+                                        </div>
+                                    </template>
+                                    <button type="button" @click="addItem('sentence_parts')" class="text-sm text-indigo-600">+ Tambah Bagian</button>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Opsi Jawaban</label>
+                                    <template x-for="(option, index) in exercise.content.options" :key="index">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <input type="text" :name="`content[options][${index}]`" x-model="exercise.content.options[index]" placeholder="Teks Opsi" class="flex-1 rounded-md border-neutral-300">
+                                            <button type="button" @click="removeItem('options', index)" class="text-red-500 font-bold">&times;</button>
+                                        </div>
+                                    </template>
+                                    <button type="button" @click="addItem('options')" class="text-sm text-indigo-600">+ Tambah Opsi</button>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium">Jawaban Benar</label>
+                                    <input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" placeholder="Tulis ulang opsi yang benar" class="mt-1 block w-full border-neutral-300 rounded-md">
                                 </div>
                             </div>
 

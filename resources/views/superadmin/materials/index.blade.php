@@ -122,21 +122,21 @@
                                     <template x-if="material.type === 'Gambar'">
                                         <div class="space-y-2">
                                             <label class="block text-sm font-medium">Unggah Gambar (Wajib)</label>
-                                            <input type="file" :name="`items[${index}][file]`" class="w-full text-sm">
-                                            <label class="block text-sm font-medium mt-2">Unggah Audio (Opsional)</label>
-                                            <input type="file" :name="`items[${index}][audio_file]`" class="w-full text-sm">
+                                            <input type="file" :name="`items[${index}][file]`" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                                            <label class=" block text-sm font-medium mt-2">Unggah Audio (Opsional)</label>
+                                            <input type="file" :name="`items[${index}][audio_file]`" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
                                         </div>
                                     </template>
-                                    <template x-if="material.type === 'Teks'">
-                                        <div class="space-y-2">
+                                    <template x-if="material.type==='Teks'">
+                                        <div class=" space-y-2">
                                             <label class="block text-sm font-medium">Unggah Audio (Opsional)</label>
-                                            <input type="file" :name="`items[${index}][audio_file]`" class="w-full text-sm">
+                                            <input type="file" :name="`items[${index}][audio_file]`" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
                                         </div>
                                     </template>
-                                    <template x-if="material.type === 'Audio'">
-                                        <div class="space-y-2">
+                                    <template x-if=" material.type==='Audio'">
+                                        <div class=" space-y-2">
                                             <label class="block text-sm font-medium">Unggah Audio</label>
-                                            <input type="file" :name="`items[${index}][file]`" class="w-full text-sm">
+                                            <input type="file" :name="`items[${index}][file]`" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
                                         </div>
                                     </template>
                                     <template x-if="material.type === 'Video'">

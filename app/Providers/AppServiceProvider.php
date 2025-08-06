@@ -30,6 +30,9 @@ class AppServiceProvider extends ServiceProvider
             'spelling_quiz' => \App\Models\ExerciseSpellingQuiz::class,
             'sound_sorting' => \App\Models\ExerciseSoundSorting::class,
             'sentence_scramble' => \App\Models\ExerciseSentenceScramble::class,
+            'fill_multiple_blanks' => \App\Models\ExerciseFillMultipleBlank::class,
+            'sequencing' => \App\Models\ExerciseSequencing::class,
+            'fill_with_options' => \App\Models\ExerciseFillWithOptions::class,
         ]);
     }
 }
