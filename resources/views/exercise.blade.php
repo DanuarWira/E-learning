@@ -289,14 +289,35 @@
             const items1 = pairs.map(p => p.item1).sort(() => 0.5 - Math.random());
             const items2 = pairs.map(p => p.item2).sort(() => 0.5 - Math.random());
 
+            const generateItemHTML = (item) => {
+                if (item && String(item).startsWith('/storage/')) {
+                    const fullUrl = `${window.location.origin}${item}`;
+                    if (String(item).match(/\.(jpeg|jpg|gif|png)$/)) {
+                        return `<img src="${fullUrl}" alt="Item pasangan" class="w-full h-24 object-contain">`;
+                    }
+                    if (String(item).match(/\.(mp3|wav|ogg)$/)) {
+                        return `<button type="button" onclick="playAudio('${fullUrl}')" class="text-indigo-600 hover:text-indigo-800"><i class="fas fa-volume-up fa-2x"></i></button>`;
+                    }
+                }
+                return `<span class="text-lg">${item}</span>`; // Default ke teks
+            };
+
             ui.gameContainer.innerHTML = `
                 <p class="text-center text-neutral-600 mb-6">${content.instruction || 'Pasangkan item yang sesuai.'}</p>
                 <div class="flex justify-between gap-4">
                     <div id="items1" class="flex flex-col gap-3 w-1/2">
-                        ${items1.map(item => `<button class="match-item p-4 border rounded-lg" data-type="item1" data-value="${item}">${item}</button>`).join('')}
+                        ${items1.map(item => `
+                            <button class="match-item p-4 border-2 rounded-lg flex items-center justify-center min-h-[6rem] transition-all" data-type="item1" data-value="${item}">
+                                ${generateItemHTML(item)}
+                            </button>
+                        `).join('')}
                     </div>
                     <div id="items2" class="flex flex-col gap-3 w-1/2">
-                        ${items2.map(item => `<button class="match-item p-4 border rounded-lg" data-type="item2" data-value="${item}">${item}</button>`).join('')}
+                        ${items2.map(item => `
+                             <button class="match-item p-4 border-2 rounded-lg flex items-center justify-center h-full min-h-[6rem] transition-all" data-type="item2" data-value="${item}">
+                                ${generateItemHTML(item)}
+                            </button>
+                        `).join('')}
                     </div>
                 </div>`;
             document.querySelectorAll('.match-item').forEach(btn => btn.addEventListener('click', selectMatchItem));

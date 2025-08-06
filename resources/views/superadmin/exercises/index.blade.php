@@ -37,12 +37,16 @@
                     type: existingExercise.exerciseable_type, // Ambil tipe dari relasi
                     content: JSON.parse(JSON.stringify(existingExercise.exerciseable)) // Ambil konten dari relasi
                 };
-                
-                // Konversi array 'options' menjadi array of objects dan set jawaban benar
-                if (this.exercise.content && this.exercise.content.options) {
-                    const correctIndex = this.exercise.content.options.indexOf(this.exercise.content.correct_answer);
-                    this.exercise.content.correct_answer = correctIndex >= 0 ? correctIndex : 0;
-                    this.exercise.content.options = this.exercise.content.options.map(opt => ({ value: opt }));
+
+                if (this.exercise.content) {
+                    if (this.exercise.content.options) {
+                        const correctIndex = this.exercise.content.options.indexOf(this.exercise.content.correct_answer);
+                        this.exercise.content.correct_answer = correctIndex >= 0 ? correctIndex : 0;
+                        this.exercise.content.options = this.exercise.content.options.map(opt => ({ value: opt }));
+                    }
+                    if (this.exercise.content.pairs) {
+                        this.exercise.content.pairs = this.exercise.content.pairs.map(p => ({ item1: { value: p.item1 }, item2: { value: p.item2 } }));
+                    }
                 }
 
             } else {
@@ -75,15 +79,23 @@
             else { this.exercise.content = {}; }
         },
         addItem(key) {
-            if (!this.exercise.content[key]) this.exercise.content[key] = [];
-            if (key === 'pairs') { this.exercise.content.pairs.push({item1: '', item2: ''}); }
-            else if (key === 'words') { this.exercise.content.words.push({word: '', silent_letter_index: 0}); }
-            else if (key === 'ss_words') { this.exercise.content.words.push({word: '', category_id: ''}); }
-            else if (key === 'ss_categories') { this.exercise.content.categories.push({name: '', id: ''}); }
+            if (!this.exercise.content[key]) {
+                this.exercise.content[key] = [];
+            }
+            
             if (key === 'options') {
                 this.exercise.content.options.push({ value: '' });
+            } else if (key === 'pairs') {
+                this.exercise.content.pairs.push({ item1: '', item2: '' });
+            } else if (key === 'words') {
+                this.exercise.content.words.push({ word: '', silent_letter_index: 0 });
+            } else if (key === 'ss_words') {
+                this.exercise.content.words.push({ word: '', category_id: '' });
+            } else if (key === 'ss_categories') {
+                this.exercise.content.categories.push({ name: '', id: '' });
+            } else {
+                this.exercise.content[key].push('');
             }
-            else { this.exercise.content[key].push(''); }
         },
         removeItem(key, index) {
             if (this.exercise.content[key]) {
@@ -243,36 +255,8 @@
                                     </template>
                                     <button type="button" @click="addItem('options')" class="text-sm text-indigo-600">+ Tambah Opsi</button>
                                 </div>
-
-                                <!-- Jawaban Benar -->
-                                <!-- <div>
-                                    <label class="block text-sm font-medium">Jawaban Benar (Teks atau Path Gambar)</label>
-                                    <input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" placeholder="Tulis ulang opsi teks atau path gambar (/storage/...)" class="mt-1 block w-full border-neutral-300 rounded-md">
-                                </div> -->
                             </div>
-                            <!-- Fields untuk Multiple Choice -->
-                            <!-- <div x-show="exercise.type === 'multiple_choice_quiz'" class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium">Teks Pertanyaan</label>
-                                    <textarea name="content[question_text]" x-model="exercise.content.question_text" class="mt-1 block w-full border-neutral-300 rounded-md"></textarea>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Opsi Jawaban</label>
-                                    <template x-for="(option, index) in exercise.content.options" :key="index">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <input type="text" :name="`content[options][${index}]`" x-model="exercise.content.options[index]" placeholder="Teks Opsi" class="flex-1 rounded-md border-neutral-300">
-                                            <button type="button" @click="removeItem('options', index)" class="text-red-500 font-bold">&times;</button>
-                                        </div>
-                                    </template>
-                                    <button type="button" @click="addItem('options')" class="text-sm text-indigo-600">+ Tambah Opsi</button>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium">Jawaban Benar</label>
-                                    <input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" placeholder="Tulis ulang opsi yang benar" class="mt-1 block w-full border-neutral-300 rounded-md">
-                                </div>
-                            </div> -->
 
-                            <!-- Fields untuk Matching Game -->
                             <div x-show="exercise.type === 'matching_game'" class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium">Instruksi</label>
@@ -281,11 +265,35 @@
                                 <div>
                                     <label class="block text-sm font-medium mb-1">Pasangan</label>
                                     <template x-for="(pair, index) in exercise.content.pairs" :key="index">
-                                        <div class="flex items-center gap-2 mb-2 p-2 border rounded-md">
-                                            <input type="text" :name="`content[pairs][${index}][item1]`" x-model="pair.item1" placeholder="Item 1" class="flex-1 rounded-md border-neutral-300">
-                                            <span class="text-neutral-400">=</span>
-                                            <input type="text" :name="`content[pairs][${index}][item2]`" x-model="pair.item2" placeholder="Item 2" class="flex-1 rounded-md border-neutral-300">
-                                            <button type="button" @click="removeItem('pairs', index)" class="text-red-500 font-bold">&times;</button>
+                                        <div class="flex items-start gap-2 mb-2 p-3 border rounded-md">
+                                            <!-- Item 1 -->
+                                            <div class="flex-1 space-y-2">
+                                                <p class="text-sm font-semibold">Item 1</p>
+                                                <input type="text" :name="`content[pairs][${index}][item1][text]`" :value="pair.item1.value && !String(pair.item1.value).startsWith('/storage/') ? pair.item1.value : ''" placeholder="Teks Item 1" class="w-full rounded-md border-neutral-300">
+                                                <p class="text-xs text-gray-500">atau Gambar</p>
+                                                <input type="file" :name="`content[pairs][${index}][item1][image]`" accept="image/*" class="input-file mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                                                <p class="text-xs text-gray-500">atau Audio</p>
+                                                <input type="file" :name="`content[pairs][${index}][item1][audio]`" accept="audio/*" class="input-file mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                                                <div x-show="isEditMode && pair.item1.value && String(pair.item1.value).startsWith('/storage/')">
+                                                    <img x-show="String(pair.item1.value).match(/\.(jpeg|jpg|gif|png)$/)" :src="`${window.location.origin}${pair.item1.value}`" class="w-20 h-20 object-cover mt-2 rounded">
+                                                    <audio x-show="String(pair.item1.value).match(/\.(mp3|wav|ogg)$/)" :src="`${window.location.origin}${pair.item1.value}`" controls class="w-full mt-2"></audio>
+                                                </div>
+                                            </div>
+                                            <span class="text-neutral-400 mt-8 font-bold">=</span>
+                                            <!-- Item 2 -->
+                                            <div class="flex-1 space-y-2">
+                                                <p class="text-sm font-semibold">Item 2</p>
+                                                <input type="text" :name="`content[pairs][${index}][item2][text]`" :value="pair.item2.value && !String(pair.item2.value).startsWith('/storage/') ? pair.item2.value : ''" placeholder="Teks Item 2" class="w-full rounded-md border-neutral-300">
+                                                <p class="text-xs text-gray-500">atau Gambar</p>
+                                                <input type="file" :name="`content[pairs][${index}][item2][image]`" accept="image/*" class="input-file mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                                                <p class="text-xs text-gray-500">atau Audio</p>
+                                                <input type="file" :name="`content[pairs][${index}][item2][audio]`" accept="audio/*" class="input-file mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                                                <div x-show="isEditMode && pair.item2.value && String(pair.item2.value).startsWith('/storage/')">
+                                                    <img x-show="String(pair.item2.value).match(/\.(jpeg|jpg|gif|png)$/)" :src="`${window.location.origin}${pair.item2.value}`" class="w-20 h-20 object-cover mt-2 rounded">
+                                                    <audio x-show="String(pair.item2.value).match(/\.(mp3|wav|ogg)$/)" :src="`${window.location.origin}${pair.item2.value}`" controls class="w-full mt-2"></audio>
+                                                </div>
+                                            </div>
+                                            <button type="button" @click="removeItem('pairs', index)" class="text-red-500 font-bold mt-8">&times;</button>
                                         </div>
                                     </template>
                                     <button type="button" @click="addItem('pairs')" class="text-sm text-indigo-600">+ Tambah Pasangan</button>
@@ -298,27 +306,6 @@
                                     <textarea name="content[prompt_text]" x-model="exercise.content.prompt_text" class="mt-1 block w-full border-neutral-300 rounded-md" placeholder="Contoh: The quick brown fox jumps over the lazy dog."></textarea>
                                 </div>
                             </div>
-
-                            <!-- <div x-show="exercise.type === 'translation_match'" class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium">Kata/Frasa Pertanyaan</label>
-                                    <input type="text" name="content[question_word]" x-model="exercise.content.question_word" class="mt-1 block w-full border-neutral-300 rounded-md" placeholder="Contoh: Selamat datang">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Opsi Jawaban (Termasuk Jawaban Benar)</label>
-                                    <template x-for="(option, index) in exercise.content.options" :key="index">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <input type="text" :name="`content[options][${index}]`" x-model="exercise.content.options[index]" placeholder="Teks Opsi" class="flex-1 rounded-md border-neutral-300">
-                                            <button type="button" @click="removeItem('options', index)" class="text-red-500 font-bold">&times;</button>
-                                        </div>
-                                    </template>
-                                    <button type="button" @click="addItem('options')" class="text-sm text-indigo-600">+ Tambah Opsi</button>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium">Jawaban Benar</label>
-                                    <input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" placeholder="Tulis ulang opsi yang benar" class="mt-1 block w-full border-neutral-300 rounded-md">
-                                </div>
-                            </div> -->
 
                             <div x-show="exercise.type === 'silent_letter_hunt'" class="space-y-4">
                                 <div>
@@ -418,33 +405,6 @@
                                     <button type="button" @click="addItem('steps')" class="text-sm text-indigo-600">+ Tambah Langkah</button>
                                 </div>
                             </div>
-
-                            <!-- <div x-show="exercise.type === 'fill_with_options'" class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Bagian Kalimat (sebelum dan sesudah jawaban)</label>
-                                    <template x-for="(part, index) in exercise.content.sentence_parts" :key="index">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <input type="text" :name="`content[sentence_parts][${index}]`" x-model="exercise.content.sentence_parts[index]" :placeholder="`Bagian ${index + 1}`" class="flex-1 rounded-md border-neutral-300">
-                                            <button type="button" @click="removeItem('sentence_parts', index)" class="text-red-500 font-bold">&times;</button>
-                                        </div>
-                                    </template>
-                                    <button type="button" @click="addItem('sentence_parts')" class="text-sm text-indigo-600">+ Tambah Bagian</button>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Opsi Jawaban</label>
-                                    <template x-for="(option, index) in exercise.content.options" :key="index">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <input type="text" :name="`content[options][${index}]`" x-model="exercise.content.options[index]" placeholder="Teks Opsi" class="flex-1 rounded-md border-neutral-300">
-                                            <button type="button" @click="removeItem('options', index)" class="text-red-500 font-bold">&times;</button>
-                                        </div>
-                                    </template>
-                                    <button type="button" @click="addItem('options')" class="text-sm text-indigo-600">+ Tambah Opsi</button>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium">Jawaban Benar</label>
-                                    <input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" placeholder="Tulis ulang opsi yang benar" class="mt-1 block w-full border-neutral-300 rounded-md">
-                                </div>
-                            </div> -->
 
                         </div>
                     </div>

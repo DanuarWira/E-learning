@@ -45,6 +45,22 @@ class ExerciseController extends Controller
                 }
             }
         }
+        if (isset($content['pairs'])) {
+            foreach ($content['pairs'] as $index => $pair) {
+                if (!$request->hasFile("content.pairs.{$index}.item1.image")) {
+                    $content['pairs'][$index]['item1']['image'] = null;
+                }
+                if (!$request->hasFile("content.pairs.{$index}.item1.audio")) {
+                    $content['pairs'][$index]['item1']['audio'] = null;
+                }
+                if (!$request->hasFile("content.pairs.{$index}.item2.image")) {
+                    $content['pairs'][$index]['item2']['image'] = null;
+                }
+                if (!$request->hasFile("content.pairs.{$index}.item2.audio")) {
+                    $content['pairs'][$index]['item2']['audio'] = null;
+                }
+            }
+        }
         $request->merge(['content' => $content]);
 
         $validated = $request->validate([
@@ -68,6 +84,13 @@ class ExerciseController extends Controller
             'content.options.*.text' => 'nullable|string',
             'content.options.*.image' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'content.audio_file' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
+            'content.pairs' => 'nullable|array',
+            'content.pairs.*.item1.text' => 'nullable|string',
+            'content.pairs.*.item1.image' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'content.pairs.*.item1.audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
+            'content.pairs.*.item2.text' => 'nullable|string',
+            'content.pairs.*.item2.image' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'content.pairs.*.item2.audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
         ]);
 
         DB::transaction(function () use ($validated, $request) {
@@ -87,15 +110,22 @@ class ExerciseController extends Controller
                 $contentData['options'] = $finalOptions;
             }
 
-            // --- INI BAGIAN KUNCINYA ---
-            // Mengubah 'correct_answer' yang berisi INDEX menjadi NILAI JAWABAN
+            if ($validated['type'] === 'matching_game' && isset($contentData['pairs'])) {
+                $finalPairs = [];
+                foreach ($contentData['pairs'] as $index => $pair) {
+                    $item1Value = $this->processPairItem($request, "content.pairs.{$index}.item1", $pair['item1']['text'] ?? '');
+                    $item2Value = $this->processPairItem($request, "content.pairs.{$index}.item2", $pair['item2']['text'] ?? '');
+                    $finalPairs[] = ['item1' => $item1Value, 'item2' => $item2Value];
+                }
+                $contentData['pairs'] = $finalPairs;
+            }
+
             if (isset($contentData['correct_answer'])) {
                 $correctIndex = (int)$contentData['correct_answer'];
                 if (isset($finalOptions[$correctIndex])) {
-                    // Nilai 'correct_answer' ditimpa dengan nilai dari array $finalOptions
                     $contentData['correct_answer'] = $finalOptions[$correctIndex];
                 } else {
-                    $contentData['correct_answer'] = null; // Default jika index tidak valid
+                    $contentData['correct_answer'] = null;
                 }
             }
 
@@ -126,6 +156,22 @@ class ExerciseController extends Controller
                 }
             }
         }
+        if (isset($content['pairs'])) {
+            foreach ($content['pairs'] as $index => $pair) {
+                if (!$request->hasFile("content.pairs.{$index}.item1.image")) {
+                    $content['pairs'][$index]['item1']['image'] = null;
+                }
+                if (!$request->hasFile("content.pairs.{$index}.item1.audio")) {
+                    $content['pairs'][$index]['item1']['audio'] = null;
+                }
+                if (!$request->hasFile("content.pairs.{$index}.item2.image")) {
+                    $content['pairs'][$index]['item2']['image'] = null;
+                }
+                if (!$request->hasFile("content.pairs.{$index}.item2.audio")) {
+                    $content['pairs'][$index]['item2']['audio'] = null;
+                }
+            }
+        }
         $request->merge(['content' => $content]);
 
         $validated = $request->validate([
@@ -148,6 +194,13 @@ class ExerciseController extends Controller
             'content.options.*.text' => 'nullable|string',
             'content.options.*.image' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'content.audio_file' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
+            'content.pairs' => 'nullable|array',
+            'content.pairs.*.item1.text' => 'nullable|string',
+            'content.pairs.*.item1.image' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'content.pairs.*.item1.audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
+            'content.pairs.*.item2.text' => 'nullable|string',
+            'content.pairs.*.item2.image' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'content.pairs.*.item2.audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
         ]);
 
         DB::transaction(function () use ($validated, $request, $exercise) {
@@ -179,6 +232,22 @@ class ExerciseController extends Controller
                     }
                 }
                 $contentData['options'] = $finalOptions;
+            }
+
+            if ($exercise->exerciseable_type === 'matching_game' && isset($contentData['pairs'])) {
+                $finalPairs = [];
+                $oldPairs = $exerciseDetail->pairs ?? [];
+
+                foreach ($contentData['pairs'] as $index => $pair) {
+                    $oldItem1 = $oldPairs[$index]['item1'] ?? null;
+                    $oldItem2 = $oldPairs[$index]['item2'] ?? null;
+
+                    $item1Value = $this->processPairItem($request, "content.pairs.{$index}.item1", $pair['item1']['text'] ?? null, $oldItem1);
+                    $item2Value = $this->processPairItem($request, "content.pairs.{$index}.item2", $pair['item2']['text'] ?? null, $oldItem2);
+
+                    $finalPairs[] = ['item1' => $item1Value, 'item2' => $item2Value];
+                }
+                $contentData['pairs'] = $finalPairs;
             }
 
             if (isset($contentData['correct_answer'])) {
@@ -235,64 +304,28 @@ class ExerciseController extends Controller
         return redirect()->route('superadmin.exercises.index')->with('success', 'Latihan berhasil dihapus.');
     }
 
-    private function sanitizeContent(string $type, array $content): array
+    private function processPairItem(Request $request, string $baseName, ?string $textValue, ?string $oldValue = null): string
     {
-        switch ($type) {
-            case 'matching_game':
-                return ['pairs' => $content['pairs'] ?? []];
-            case 'translation_match':
-                return ['pairs' => array_values($content['pairs'] ?? [])];
-            case 'speaking_practice':
-                return ['prompt_text' => $content['prompt_text'] ?? ''];
-            case 'silent_letter_hunt':
-                return [
-                    'sentence' => $content['sentence'] ?? '',
-                    'words' => array_values($content['words'] ?? [])
-                ];
-            case 'spelling_quiz':
-                return [
-                    'audio_url' => $content['audio_url'] ?? '',
-                    'correct_answer' => $content['correct_answer'] ?? '',
-                ];
-            case 'sound_sorting':
-                return [
-                    'categories' => array_values($content['categories'] ?? []),
-                    'words' => array_values($content['words'] ?? [])
-                ];
-            case 'sentence_scramble':
-                return ['sentence' => $content['sentence'] ?? ''];
-            case 'fill_in_the_blank':
-                return [
-                    'sentence_parts' => $content['sentence_parts'] ?? [],
-                    'correct_answer' => $content['correct_answer'] ?? ''
-                ];
-            case 'sequencing':
-                return ['sentence' => $content['sentence'] ?? ''];
-            case 'listening_task':
-                return [
-                    'instruction' => $content['instruction'] ?? '',
-                    'options' => array_values($content['options'] ?? []),
-                    'correct_answer' => $content['correct_answer'] ?? ''
-                ];
-            case 'fill_with_options':
-                return [
-                    'sentence_parts' => $content['sentence_parts'] ?? [],
-                    'options' => array_values($content['options'] ?? []),
-                    'correct_answer' => $content['correct_answer'] ?? ''
-                ];
-            case 'fill_multiple_blanks':
-                return [
-                    'sentence_parts' => $content['sentence_parts'] ?? [],
-                    'correct_answers' => $content['correct_answers'] ?? []
-                ];
-            case 'multiple_choice_quiz':
-                return [
-                    'question_text' => $content['question_text'] ?? '',
-                    'options' => $content['options'] ?? [],
-                    'correct_answer' => $content['correct_answer'] ?? ''
-                ];
-            default:
-                return [];
+        if ($request->hasFile("{$baseName}.image")) {
+            if ($oldValue && Str::startsWith($oldValue, '/storage')) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $oldValue));
+            }
+            $path = $request->file("{$baseName}.image")->store('pairs', 'public');
+            return Storage::url($path);
         }
+
+        if ($request->hasFile("{$baseName}.audio")) {
+            if ($oldValue && Str::startsWith($oldValue, '/storage')) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $oldValue));
+            }
+            $path = $request->file("{$baseName}.audio")->store('pairs', 'public');
+            return Storage::url($path);
+        }
+
+        if ($textValue === null && $oldValue && Str::startsWith($oldValue, '/storage')) {
+            return $oldValue;
+        }
+
+        return $textValue ?? '';
     }
 }
