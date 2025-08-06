@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('material_id')->constrained()->onDelete('cascade');
             $table->string('title')->nullable();
             $table->text('description');
-            $table->string('url')->nullable();
             $table->integer('order')->default(0);
             $table->timestamps();
         });

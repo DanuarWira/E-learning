@@ -17,7 +17,7 @@ class VocabularyController extends Controller
     public function index(): View
     {
         $vocabularies = Vocabulary::with(['lesson', 'items'])->orderBy('lesson_id')->paginate(10);
-        $lessons = Lesson::orderBy('title')->get(); // Ambil lessons untuk dropdown di modal
+        $lessons = Lesson::orderBy('title')->get();
         return view('superadmin.vocabularies.index', compact('vocabularies', 'lessons'));
     }
 
@@ -28,8 +28,10 @@ class VocabularyController extends Controller
             'category' => 'required|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.term' => 'required|string|max:255',
-            'items.*.details' => 'nullable|string',
-            'items.*.media' => 'nullable|file|mimes:mp3,wav,mp4|max:5120', // Validasi file
+            'items.*.details' => 'nullable|array',
+            'items.*.details.*.chunk' => 'required_with:items.*.details|string',
+            'items.*.details.*.translation' => 'required_with:items.*.details|string',
+            'items.*.media' => 'nullable|file|mimes:mp3,wav,mp4,jpeg,png,jpg,gif|max:5120',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -54,8 +56,10 @@ class VocabularyController extends Controller
             'category' => 'required|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.term' => 'required|string|max:255',
-            'items.*.details' => 'nullable|string',
-            'items.*.media' => 'nullable|file|mimes:mp3,wav,mp4|max:5120',
+            'items.*.details' => 'nullable|array',
+            'items.*.details.*.chunk' => 'required_with:items.*.details|string',
+            'items.*.details.*.translation' => 'required_with:items.*.details|string',
+            'items.*.media' => 'nullable|file|mimes:mp3,wav,mp4,jpeg,png,jpg,gif|max:5120',
         ]);
 
         DB::transaction(function () use ($request, $vocabulary) {

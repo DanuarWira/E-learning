@@ -20,7 +20,6 @@ $allItems = $vocabulary->items;
 
         .side-nav-item.active {
             background-color: #4f46e5;
-            /* indigo-600 */
             color: white;
             font-weight: bold;
             transform: scale(1.1);
@@ -42,7 +41,24 @@ $allItems = $vocabulary->items;
 
         .clickable-word:hover {
             color: #4f46e5;
-            /* Warna indigo saat di-hover */
+        }
+
+        .clickable-chunk {
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .clickable-chunk:hover {
+            color: #4f46e5;
+            border-bottom-color: #4f46e5;
+        }
+
+        .translation-chunk {
+            transition: opacity 0.3s ease;
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
 </head>
@@ -52,13 +68,11 @@ $allItems = $vocabulary->items;
     <div id="lesson-data" data-items='@json($allItems)' class="hidden"></div>
 
     <main class="flex flex-col md:flex-row h-screen antialiased">
-        <!-- Side Navigation (Desktop) / Top Navigation (Mobile) -->
         <aside class="w-full md:w-24 bg-white shadow-lg md:shadow-md flex md:flex-col items-center p-2 md:py-6 no-scrollbar shrink-0">
-            <!-- Close button for Desktop -->
             <a href="{{ route('lessons.show', $lesson) }}" class="hidden md:block mb-6 text-neutral-500 hover:text-indigo-600" title="Kembali ke Pelajaran">
                 <i class="fas fa-times fa-2x"></i>
             </a>
-            <!-- Nav items container -->
+
             <div id="side-navigation" class="flex flex-row md:flex-col items-center gap-2 md:gap-3 w-full no-scrollbar">
                 @foreach($allItems as $index => $item)
                 <button class="side-nav-item w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full text-neutral-600 bg-neutral-200 transition-all duration-200 shrink-0" data-index="{{ $index }}">
@@ -68,9 +82,7 @@ $allItems = $vocabulary->items;
             </div>
         </aside>
 
-        <!-- Konten Utama Pelajaran -->
         <div class="flex-1 flex flex-col p-4 md:p-8 overflow-y-auto">
-            <!-- Top bar for Mobile with close button and progress -->
             <div class="flex items-center gap-4 mb-4 md:mb-8">
                 <div class="w-full bg-neutral-200 rounded-full h-4">
                     <div id="progress-bar" class="bg-green-500 h-4 rounded-full transition-all duration-300" style="width: 0%;"></div>
@@ -80,23 +92,12 @@ $allItems = $vocabulary->items;
                 </a>
             </div>
 
-            <!-- Konten Interaktif -->
             <div class="flex-1 flex flex-col items-center justify-center">
-                <div class="w-full max-w-2xl text-center">
-                    <p class="text-base sm:text-lg text-neutral-500 mb-2">Term:</p>
+                <div id="item-container" class="w-full max-w-2xl text-center">
 
-                    <div id="term-container" class="flex items-center justify-center gap-2 sm:gap-4 text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-800">
-                        <!-- Konten akan diisi oleh JavaScript -->
-                    </div>
-
-                    <div class="mt-6 sm:mt-8 p-4 sm:p-6 bg-white rounded-lg shadow-inner">
-                        <p class="text-base sm:text-lg text-neutral-500 mb-2">Details:</p>
-                        <p id="item-details" class="text-lg sm:text-xl text-neutral-700"></p>
-                    </div>
                 </div>
             </div>
 
-            <!-- Tombol Navigasi -->
             <div class="border-t-2 pt-6 mt-8 flex justify-between items-center">
                 <button id="prev-button" class="py-3 px-4 sm:px-6 bg-white text-neutral-700 rounded-lg shadow font-semibold hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base">
                     <i class="fas fa-chevron-left mr-2"></i> Sebelumnya
@@ -114,94 +115,137 @@ $allItems = $vocabulary->items;
         const allItems = JSON.parse(lessonDataElement.dataset.items);
         let currentItemIndex = 0;
 
-        const termContainer = document.getElementById('term-container');
-        const detailsElement = document.getElementById('item-details');
-        const prevButton = document.getElementById('prev-button');
-        const nextButton = document.getElementById('next-button');
-        const progressBar = document.getElementById('progress-bar');
-        const itemCounter = document.getElementById('item-counter');
-        const sideNavItems = document.querySelectorAll('.side-nav-item');
-        let isPlaying = false;
+        const ui = {
+            itemContainer: document.getElementById('item-container'),
+            prevButton: document.getElementById('prev-button'),
+            nextButton: document.getElementById('next-button'),
+            progressBar: document.getElementById('progress-bar'),
+            itemCounter: document.getElementById('item-counter'),
+            sideNavItems: document.querySelectorAll('.side-nav-item'),
+            footerContainer: document.querySelector('.border-t-2')
+        };
 
-        function playAudio(textToSpeak) {
-            if (isPlaying || !('speechSynthesis' in window)) return;
-
-            // Hentikan audio yang sedang berjalan jika ada
+        function playAudio(urlOrText) {
             window.speechSynthesis.cancel();
 
-            const utterance = new SpeechSynthesisUtterance(textToSpeak.replace(/"/g, '')); // Hapus tanda kutip
-            utterance.lang = 'en-US';
-            isPlaying = true;
-            utterance.onend = () => {
-                isPlaying = false;
-            };
-            window.speechSynthesis.speak(utterance);
+            if (urlOrText.startsWith('http')) {
+                const audio = new Audio(urlOrText);
+                audio.play().catch(e => console.error("Gagal memutar audio:", e));
+            } else {
+
+            }
         }
 
         function renderItem(index) {
             if (index < 0 || index >= allItems.length) return;
-
-            const item = allItems[index];
-            termContainer.innerHTML = '';
-            detailsElement.textContent = item.details;
             currentItemIndex = index;
 
-            const speakButton = document.createElement('button');
-            speakButton.title = "Dengarkan Pengucapan";
-            speakButton.innerHTML = '<i class="fas fa-volume-up fa-lg"></i>';
+            const item = allItems[index];
 
-            if (item.term.includes(' vs. ')) {
-                const words = item.term.split(' vs. ');
-                words.forEach((word, wordIndex) => {
-                    const wordSpan = document.createElement('span');
-                    wordSpan.textContent = word;
-                    wordSpan.classList.add('clickable-word');
-                    wordSpan.title = `Dengarkan "${word}"`;
-                    wordSpan.onclick = () => playAudio(word);
-                    termContainer.appendChild(wordSpan);
+            ui.itemContainer.innerHTML = '';
 
-                    if (wordIndex < words.length - 1) {
-                        const vsSpan = document.createElement('span');
-                        vsSpan.textContent = ' vs. ';
-                        vsSpan.classList.add('text-neutral-400', 'mx-1', 'sm:mx-2', 'text-2xl', 'sm:text-3xl');
-                        termContainer.appendChild(vsSpan);
-                    }
-                });
-            } else {
-                const termText = document.createElement('h1');
-                termText.textContent = item.term;
-                termContainer.appendChild(termText);
-            }
+            const termDiv = document.createElement('div');
+            termDiv.className = 'flex items-center justify-center gap-2 sm:gap-4';
 
+            const termH2 = document.createElement('h2');
+            termH2.className = 'text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-800 inline';
+            termH2.textContent = item.term;
+            termDiv.appendChild(termH2);
+
+            let mediaElement = null;
             if (item.media_url) {
-                const audio = new Audio(item.media_url);
-                speakButton.onclick = () => audio.play();
-                termContainer.appendChild(speakButton);
+                const fullUrl = `${window.location.origin}${item.media_url}`;
+
+                if (item.media_url.match(/\.(jpeg|jpg|gif|png)$/i)) {
+                    mediaElement = document.createElement('img');
+                    mediaElement.src = fullUrl;
+                    mediaElement.alt = item.term;
+                    mediaElement.className = 'mt-6 mx-auto max-h-60 rounded-lg border shadow-sm';
+
+                } else if (item.media_url.match(/\.(mp3|wav|ogg)$/i)) {
+                    const speakButton = document.createElement('button');
+                    speakButton.title = "Dengarkan Audio";
+                    speakButton.className = 'ml-3 text-indigo-600 align-middle';
+                    speakButton.innerHTML = '<i class="fas fa-volume-up fa-lg"></i>';
+                    speakButton.onclick = () => playAudio(fullUrl);
+                    termDiv.appendChild(speakButton);
+
+                } else if (item.media_url.match(/\.(mp4)$/i)) {
+                    mediaElement = document.createElement('video');
+                    mediaElement.src = fullUrl;
+                    mediaElement.controls = true;
+                    mediaElement.className = 'mt-6 mx-auto w-full max-w-md rounded-lg border shadow-sm';
+
+                    const speakButton = document.createElement('button');
+                }
             } else {
-                // speakButton.onclick = () => playAudio(item.term);
+
             }
+
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'mt-8 p-4 sm:p-6 bg-white rounded-lg shadow-inner text-center';
+
+            const detailsTitle = document.createElement('p');
+            detailsTitle.className = 'text-base sm:text-lg text-neutral-500 mb-4';
+
+            const detailsContent = document.createElement('p');
+            detailsContent.className = 'text-lg sm:text-xl text-neutral-700 leading-relaxed';
+
+            if (Array.isArray(item.details) && item.details.length > 0 && typeof item.details[0] === 'object') {
+                item.details.forEach(detail => {
+                    const chunkWrapper = document.createElement('span');
+
+                    const chunkSpan = document.createElement('span');
+                    chunkSpan.textContent = detail.chunk + ' ';
+                    chunkSpan.className = 'clickable-chunk';
+
+                    const translationSpan = document.createElement('span');
+                    translationSpan.textContent = `(${detail.translation}) `;
+                    translationSpan.className = 'translation-chunk text-neutral-500 italic hidden';
+
+                    chunkSpan.onclick = () => {
+                        translationSpan.classList.toggle('hidden');
+                    };
+
+                    chunkWrapper.appendChild(chunkSpan);
+                    chunkWrapper.appendChild(translationSpan);
+                    detailsContent.appendChild(chunkWrapper);
+                });
+            } else if (typeof item.details === 'string') {
+                detailsContent.textContent = item.details || '-';
+            } else {
+                detailsContent.textContent = '-';
+            }
+
+            detailsDiv.appendChild(detailsContent);
+
+            ui.itemContainer.appendChild(termDiv);
+            if (mediaElement) {
+                ui.itemContainer.appendChild(mediaElement);
+            }
+            ui.itemContainer.appendChild(detailsDiv);
+
             updateUI();
         }
 
         function updateUI() {
             const progressPercentage = ((currentItemIndex + 1) / allItems.length) * 100;
-            progressBar.style.width = `${progressPercentage}%`;
-            itemCounter.textContent = `${currentItemIndex + 1} / ${allItems.length}`;
-            prevButton.disabled = currentItemIndex === 0;
+            ui.progressBar.style.width = `${progressPercentage}%`;
+            ui.itemCounter.textContent = `${currentItemIndex + 1} / ${allItems.length}`;
+            ui.prevButton.disabled = currentItemIndex === 0;
 
             if (currentItemIndex === allItems.length - 1) {
-                nextButton.textContent = 'Selesai';
-                nextButton.classList.add('bg-green-600', 'hover:bg-green-700');
-                nextButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                ui.nextButton.textContent = 'Selesai';
+                ui.nextButton.classList.add('bg-green-600', 'hover:bg-green-700');
+                ui.nextButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
             } else {
-                nextButton.innerHTML = 'Selanjutnya <i class="fas fa-chevron-right ml-2"></i>';
-                nextButton.classList.remove('bg-green-600', 'hover:bg-green-700');
-                nextButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                ui.nextButton.innerHTML = 'Selanjutnya <i class="fas fa-chevron-right ml-2"></i>';
+                ui.nextButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                ui.nextButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
             }
-            sideNavItems.forEach((navItem, idx) => {
-                navItem.classList.remove('active');
+            ui.sideNavItems.forEach((navItem, idx) => {
+                navItem.classList.toggle('active', idx === currentItemIndex);
                 if (idx === currentItemIndex) {
-                    navItem.classList.add('active');
                     navItem.scrollIntoView({
                         behavior: 'smooth',
                         block: 'nearest',
@@ -210,8 +254,7 @@ $allItems = $vocabulary->items;
                 }
             });
         }
-
-        nextButton.addEventListener('click', () => {
+        ui.nextButton.addEventListener('click', () => {
             if (currentItemIndex < allItems.length - 1) {
                 renderItem(currentItemIndex + 1);
             } else {
@@ -219,10 +262,10 @@ $allItems = $vocabulary->items;
                 window.location.href = "{{ route('lessons.show', $lesson) }}";
             }
         });
-        prevButton.addEventListener('click', () => {
+        ui.prevButton.addEventListener('click', () => {
             if (currentItemIndex > 0) renderItem(currentItemIndex - 1);
         });
-        sideNavItems.forEach(navItem => {
+        ui.sideNavItems.forEach(navItem => {
             navItem.addEventListener('click', () => {
                 const index = parseInt(navItem.dataset.index, 10);
                 renderItem(index);
@@ -232,8 +275,8 @@ $allItems = $vocabulary->items;
         if (allItems.length > 0) {
             renderItem(0);
         } else {
-            document.querySelector('.flex-1.flex.flex-col.items-center.justify-center').innerHTML = `<p class="text-neutral-500 text-xl">Tidak ada kosakata untuk kategori ini.</p>`;
-            prevButton.parentElement.style.display = 'none';
+            ui.itemContainer.innerHTML = `<p class="text-neutral-500 text-xl">Tidak ada kosakata untuk kategori ini.</p>`;
+            ui.footerContainer.style.display = 'none';
         }
 
         async function markItemsAsComplete(itemIds, itemType) {
