@@ -28,13 +28,23 @@
                 this.isEditMode = true;
                 this.modalTitle = 'Edit Latihan';
                 this.formAction = `/superadmin/exercises/${existingExercise.id}`;
+                
+                // --- PERBAIKAN: Restrukturisasi objek exercise agar cocok dengan form ---
                 this.exercise = {
                     id: existingExercise.id,
                     lesson_id: existingExercise.lesson_id,
                     title: existingExercise.title,
-                    type: existingExercise.exerciseable_type, // Sekarang ini akan berisi alias, misal: 'multiple_choice_quiz'
-                    content: existingExercise.exerciseable 
+                    type: existingExercise.exerciseable_type, // Ambil tipe dari relasi
+                    content: JSON.parse(JSON.stringify(existingExercise.exerciseable)) // Ambil konten dari relasi
                 };
+                
+                // Konversi array 'options' menjadi array of objects dan set jawaban benar
+                if (this.exercise.content && this.exercise.content.options) {
+                    const correctIndex = this.exercise.content.options.indexOf(this.exercise.content.correct_answer);
+                    this.exercise.content.correct_answer = correctIndex >= 0 ? correctIndex : 0;
+                    this.exercise.content.options = this.exercise.content.options.map(opt => ({ value: opt }));
+                }
+
             } else {
                 this.isEditMode = false;
                 this.modalTitle = 'Buat Latihan Baru';
@@ -42,8 +52,8 @@
                 this.exercise = { 
                     lesson_id: '', 
                     title: '', 
-                    type: 'multiple_choice_quiz', // Set default ke alias
-                    content: { question_text: '', options: [''], correct_answer: '' } 
+                    type: 'multiple_choice_quiz',
+                    content: { question_text: '', options: [{value: ''}], correct_answer: 0 } 
                 };
             }
             this.isModalOpen = true;
@@ -51,17 +61,17 @@
 
         resetContentOnTypeChange() {
             const type = this.exercise.type;
-            if (type === 'matching_game') { this.exercise.content = { instruction: '', pairs: [{item1: '', item2: ''}] }; }
-            else if (type === 'multiple_choice_quiz') { this.exercise.content = { question_text: '', options: [''], correct_answer: '' }; }
+            if (['multiple_choice_quiz', 'translation_match', 'fill_with_options'].includes(type)) {
+                this.exercise.content = { options: [{value: ''}], correct_answer: 0 };
+            }
+            else if (type === 'matching_game') { this.exercise.content = { instruction: '', pairs: [{item1: '', item2: ''}] }; }
             else if (type === 'pronunciation_drill') { this.exercise.content = { prompt_text: '' }; }
-            else if (type === 'translation_match') { this.exercise.content = { question_word: '', options: [''], correct_answer: '' }; }
             else if (type === 'silent_letter_hunt') { this.exercise.content = { sentence: '', words: [{word: '', silent_letter_index: 0}] }; }
             else if (type === 'spelling_quiz') { this.exercise.content = { audio_url: '', correct_answer: '' }; }
             else if (type === 'sound_sorting') { this.exercise.content = { categories: [{name: '', id: ''}], words: [{word: '', category_id: ''}] }; }
             else if (type === 'sentence_scramble') { this.exercise.content = { sentence: '' }; }
             else if (type === 'fill_multiple_blanks') { this.exercise.content = { sentence_parts: [''], correct_answers: [''] }; }
             else if (type === 'sequencing') { this.exercise.content = { steps: [''] }; }
-            else if (type === 'fill_with_options') { this.exercise.content = { sentence_parts: [''], options: [''], correct_answer: '' }; }
             else { this.exercise.content = {}; }
         },
         addItem(key) {
@@ -70,10 +80,13 @@
             else if (key === 'words') { this.exercise.content.words.push({word: '', silent_letter_index: 0}); }
             else if (key === 'ss_words') { this.exercise.content.words.push({word: '', category_id: ''}); }
             else if (key === 'ss_categories') { this.exercise.content.categories.push({name: '', id: ''}); }
+            if (key === 'options') {
+                this.exercise.content.options.push({ value: '' });
+            }
             else { this.exercise.content[key].push(''); }
         },
         removeItem(key, index) {
-            if (this.exercise.content[key] && this.exercise.content[key].length > 1) {
+            if (this.exercise.content[key]) {
                 this.exercise.content[key].splice(index, 1);
             }
         }
@@ -153,7 +166,7 @@
             <div @click.away="isModalOpen = false" class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-8 m-4 max-h-[90vh] flex flex-col">
                 <h2 class="text-2xl font-bold text-neutral-800 mb-6" x-text="modalTitle"></h2>
 
-                <form :action="formAction" method="POST" class="flex-1 overflow-y-auto pr-2">
+                <form :action="formAction" method="POST" class="flex-1 overflow-y-auto pr-2" enctype="multipart/form-data">
                     @csrf
                     <template x-if=" isEditMode"><input type="hidden" name="_method" value="PUT"></template>
 
@@ -191,8 +204,54 @@
                         <div class="border-t pt-4">
                             <h3 class="text-lg font-medium text-neutral-800 mb-2">Konten Latihan</h3>
 
+                            <div x-show="['multiple_choice_quiz', 'fill_with_options', 'translation_match'].includes(exercise.type)" class="space-y-4">
+
+                                <!-- Pertanyaan (jika ada) -->
+                                <div x-show="exercise.type === 'multiple_choice_quiz'">
+                                    <label class="block text-sm font-medium">Teks Pertanyaan</label>
+                                    <textarea name="content[question_text]" x-model="exercise.content.question_text" class="mt-1 block w-full border-neutral-300 rounded-md"></textarea>
+                                </div>
+                                <div x-show="exercise.type === 'translation_match'">
+                                    <label class="block text-sm font-medium">Kata/Frasa Pertanyaan</label>
+                                    <input type="text" name="content[question_word]" x-model="exercise.content.question_word" class="mt-1 block w-full border-neutral-300 rounded-md">
+                                </div>
+                                <div x-show="exercise.type === 'fill_with_options'">
+                                    <label class="block text-sm font-medium mb-1">Bagian Kalimat</label>
+                                    <input type="text" name="content[sentence_parts][]" x-model="exercise.content.sentence_parts[0]" placeholder="Bagian sebelum jawaban" class="w-full rounded-md border-neutral-300 mb-2">
+                                    <input type="text" name="content[sentence_parts][]" x-model="exercise.content.sentence_parts[1]" placeholder="Bagian setelah jawaban" class="w-full rounded-md border-neutral-300">
+                                </div>
+
+                                <!-- Opsi Jawaban (Teks atau Gambar) -->
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Opsi Jawaban (Pilih satu sebagai jawaban benar)</label>
+                                    <template x-for="(option, index) in exercise.content.options" :key="index">
+                                        <div class="flex items-start gap-3 mb-2 p-3 border rounded-md">
+                                            <input type="radio" name="content[correct_answer]" :value="index" x-model.number="exercise.content.correct_answer" class="mt-5">
+                                            <div class="flex-1">
+                                                <p class="text-xs text-gray-500">Opsi Teks</p>
+                                                <input type="text" :name="`content[options][${index}][text]`" :value="option.value && !String(option.value).startsWith('/storage/') ? option.value : ''" placeholder="Teks Opsi" class="w-full rounded-md border-neutral-300">
+
+                                                <p class="text-xs text-gray-500 mt-2">Atau Opsi Gambar</p>
+                                                <input type="file" :name="`content[options][${index}][image]`" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+
+                                                <div x-show="isEditMode && option.value && String(option.value).startsWith('/storage/')">
+                                                    <img :src="`${window.location.origin}${option.value}`" class="w-20 h-20 object-cover mt-2 rounded">
+                                                </div>
+                                            </div>
+                                            <button type="button" @click="removeItem('options', index)" class="text-red-500 font-bold mt-4">&times;</button>
+                                        </div>
+                                    </template>
+                                    <button type="button" @click="addItem('options')" class="text-sm text-indigo-600">+ Tambah Opsi</button>
+                                </div>
+
+                                <!-- Jawaban Benar -->
+                                <!-- <div>
+                                    <label class="block text-sm font-medium">Jawaban Benar (Teks atau Path Gambar)</label>
+                                    <input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" placeholder="Tulis ulang opsi teks atau path gambar (/storage/...)" class="mt-1 block w-full border-neutral-300 rounded-md">
+                                </div> -->
+                            </div>
                             <!-- Fields untuk Multiple Choice -->
-                            <div x-show="exercise.type === 'multiple_choice_quiz'" class="space-y-4">
+                            <!-- <div x-show="exercise.type === 'multiple_choice_quiz'" class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium">Teks Pertanyaan</label>
                                     <textarea name="content[question_text]" x-model="exercise.content.question_text" class="mt-1 block w-full border-neutral-300 rounded-md"></textarea>
@@ -211,7 +270,7 @@
                                     <label class="block text-sm font-medium">Jawaban Benar</label>
                                     <input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" placeholder="Tulis ulang opsi yang benar" class="mt-1 block w-full border-neutral-300 rounded-md">
                                 </div>
-                            </div>
+                            </div> -->
 
                             <!-- Fields untuk Matching Game -->
                             <div x-show="exercise.type === 'matching_game'" class="space-y-4">
@@ -240,7 +299,7 @@
                                 </div>
                             </div>
 
-                            <div x-show="exercise.type === 'translation_match'" class="space-y-4">
+                            <!-- <div x-show="exercise.type === 'translation_match'" class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium">Kata/Frasa Pertanyaan</label>
                                     <input type="text" name="content[question_word]" x-model="exercise.content.question_word" class="mt-1 block w-full border-neutral-300 rounded-md" placeholder="Contoh: Selamat datang">
@@ -259,7 +318,7 @@
                                     <label class="block text-sm font-medium">Jawaban Benar</label>
                                     <input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" placeholder="Tulis ulang opsi yang benar" class="mt-1 block w-full border-neutral-300 rounded-md">
                                 </div>
-                            </div>
+                            </div> -->
 
                             <div x-show="exercise.type === 'silent_letter_hunt'" class="space-y-4">
                                 <div>
@@ -360,7 +419,7 @@
                                 </div>
                             </div>
 
-                            <div x-show="exercise.type === 'fill_with_options'" class="space-y-4">
+                            <!-- <div x-show="exercise.type === 'fill_with_options'" class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium mb-1">Bagian Kalimat (sebelum dan sesudah jawaban)</label>
                                     <template x-for="(part, index) in exercise.content.sentence_parts" :key="index">
@@ -385,7 +444,7 @@
                                     <label class="block text-sm font-medium">Jawaban Benar</label>
                                     <input type="text" name="content[correct_answer]" x-model="exercise.content.correct_answer" placeholder="Tulis ulang opsi yang benar" class="mt-1 block w-full border-neutral-300 rounded-md">
                                 </div>
-                            </div>
+                            </div> -->
 
                         </div>
                     </div>

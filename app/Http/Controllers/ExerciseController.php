@@ -5,13 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Exercise;
 use App\Models\Lesson;
-use App\Models\ExerciseMatchingGame;
-use App\Models\ExerciseMultipleChoice;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Str;
 
 class ExerciseController extends Controller
 {
@@ -21,7 +20,6 @@ class ExerciseController extends Controller
      */
     public function show(Lesson $lesson, Exercise $exercise): View
     {
-        // Memastikan latihan yang diakses benar-benar milik pelajaran yang ada di URL
         if ($exercise->lesson_id !== $lesson->id) {
             abort(404);
         }
@@ -38,37 +36,75 @@ class ExerciseController extends Controller
 
     public function store(Request $request)
     {
+        // Membersihkan input file yang kosong sebelum validasi
+        $content = $request->input('content', []);
+        if (isset($content['options'])) {
+            foreach ($content['options'] as $index => $option) {
+                if (!$request->hasFile("content.options.{$index}.image")) {
+                    $content['options'][$index]['image'] = null;
+                }
+            }
+        }
+        $request->merge(['content' => $content]);
+
         $validated = $request->validate([
             'lesson_id' => 'required|exists:lessons,id',
             'title' => 'required|string|max:255',
             'type' => 'required|string',
             'content' => 'required|array',
-            'content.*' => 'nullable',
-            'content.audio_file' => 'nullable|file|mimes:mp3,wav,ogg', // Validasi untuk file audio
+            // Validasi untuk semua kemungkinan field di dalam 'content'
+            'content.question_text' => 'nullable|string',
+            'content.question_word' => 'nullable|string',
+            'content.correct_answer' => 'nullable|integer', // Menerima index dari radio button
+            'content.prompt_text' => 'nullable|string',
+            'content.sentence' => 'nullable|string',
+            'content.instruction' => 'nullable|string',
+            'content.sentence_parts' => 'nullable|array',
+            'content.correct_answers' => 'nullable|array',
+            'content.words' => 'nullable|array',
+            'content.categories' => 'nullable|array',
+            'content.steps' => 'nullable|array',
+            'content.options' => 'nullable|array',
+            'content.options.*.text' => 'nullable|string',
+            'content.options.*.image' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'content.audio_file' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
         ]);
 
         DB::transaction(function () use ($validated, $request) {
             $modelClass = Relation::getMorphedModel($validated['type']);
             $contentData = $validated['content'];
+            $finalOptions = [];
+
+            if (isset($contentData['options'])) {
+                foreach ($contentData['options'] as $index => $option) {
+                    if ($request->hasFile("content.options.{$index}.image")) {
+                        $path = $request->file("content.options.{$index}.image")->store('options', 'public');
+                        $finalOptions[] = Storage::url($path);
+                    } else {
+                        $finalOptions[] = $option['text'] ?? '';
+                    }
+                }
+                $contentData['options'] = $finalOptions;
+            }
+
+            // --- INI BAGIAN KUNCINYA ---
+            // Mengubah 'correct_answer' yang berisi INDEX menjadi NILAI JAWABAN
+            if (isset($contentData['correct_answer'])) {
+                $correctIndex = (int)$contentData['correct_answer'];
+                if (isset($finalOptions[$correctIndex])) {
+                    // Nilai 'correct_answer' ditimpa dengan nilai dari array $finalOptions
+                    $contentData['correct_answer'] = $finalOptions[$correctIndex];
+                } else {
+                    $contentData['correct_answer'] = null; // Default jika index tidak valid
+                }
+            }
 
             if ($modelClass && class_exists($modelClass)) {
-                // --- LOGIKA UPLOAD FILE UNTUK SPELLING QUIZ ---
-                if ($validated['type'] === 'spelling_quiz' && $request->hasFile('content.audio_file')) {
-                    // Simpan file ke public/storage/audio dan dapatkan path-nya
-                    $path = $request->file('content.audio_file')->store('audio', 'public');
-                    // Simpan URL yang bisa diakses publik
-                    $contentData['audio_url'] = Storage::url($path);
-                }
-                unset($contentData['audio_file']); // Hapus file dari data sebelum create
-                // ---------------------------------------------
-
                 $exerciseDetail = $modelClass::create($contentData);
-
                 $exercise = new Exercise([
                     'lesson_id' => $validated['lesson_id'],
                     'title' => $validated['title'],
                 ]);
-
                 $exerciseDetail->exercise()->save($exercise);
             }
         });
@@ -81,11 +117,37 @@ class ExerciseController extends Controller
      */
     public function update(Request $request, Exercise $exercise)
     {
+        // Membersihkan input file yang kosong sebelum validasi
+        $content = $request->input('content', []);
+        if (isset($content['options'])) {
+            foreach ($content['options'] as $index => $option) {
+                if (!$request->hasFile("content.options.{$index}.image")) {
+                    $content['options'][$index]['image'] = null;
+                }
+            }
+        }
+        $request->merge(['content' => $content]);
+
         $validated = $request->validate([
             'lesson_id' => 'required|exists:lessons,id',
             'title' => 'required|string|max:255',
             'content' => 'required|array',
-            'content.audio_file' => 'nullable|file|mimes:mp3,wav,ogg',
+            // --- PERBAIKAN: Tambahkan validasi untuk semua field konten ---
+            'content.question_text' => 'nullable|string',
+            'content.question_word' => 'nullable|string',
+            'content.correct_answer' => 'nullable|integer',
+            'content.prompt_text' => 'nullable|string',
+            'content.sentence' => 'nullable|string',
+            'content.instruction' => 'nullable|string',
+            'content.sentence_parts' => 'nullable|array',
+            'content.correct_answers' => 'nullable|array',
+            'content.words' => 'nullable|array',
+            'content.categories' => 'nullable|array',
+            'content.steps' => 'nullable|array',
+            'content.options' => 'nullable|array',
+            'content.options.*.text' => 'nullable|string',
+            'content.options.*.image' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'content.audio_file' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
         ]);
 
         DB::transaction(function () use ($validated, $request, $exercise) {
@@ -96,20 +158,49 @@ class ExerciseController extends Controller
 
             $contentData = $validated['content'];
             $exerciseDetail = $exercise->exerciseable;
+            $finalOptions = [];
+
+            if ($exerciseDetail && isset($contentData['options'])) {
+                $oldOptions = $exerciseDetail->options ?? [];
+                foreach ($contentData['options'] as $index => $option) {
+                    if ($request->hasFile("content.options.{$index}.image")) {
+                        if (isset($oldOptions[$index]) && Str::startsWith($oldOptions[$index], '/storage')) {
+                            Storage::disk('public')->delete(str_replace('/storage/', '', $oldOptions[$index]));
+                        }
+                        $path = $request->file("content.options.{$index}.image")->store('options', 'public');
+                        $finalOptions[] = Storage::url($path);
+                    } else {
+                        $textValue = $option['text'] ?? null;
+                        if ($textValue === null && isset($oldOptions[$index]) && Str::startsWith($oldOptions[$index], '/storage')) {
+                            $finalOptions[] = $oldOptions[$index];
+                        } else {
+                            $finalOptions[] = $textValue ?? '';
+                        }
+                    }
+                }
+                $contentData['options'] = $finalOptions;
+            }
+
+            if (isset($contentData['correct_answer'])) {
+                $correctIndex = (int)$contentData['correct_answer'];
+                $optionsToUse = !empty($finalOptions) ? $finalOptions : ($exerciseDetail->options ?? []);
+                if (isset($optionsToUse[$correctIndex])) {
+                    $contentData['correct_answer'] = $optionsToUse[$correctIndex];
+                } else {
+                    $contentData['correct_answer'] = null;
+                }
+            }
 
             if ($exerciseDetail) {
-                // --- LOGIKA UPLOAD FILE UNTUK SPELLING QUIZ (UPDATE) ---
+                // ... logika update audio ...
                 if ($exercise->exerciseable_type === 'spelling_quiz' && $request->hasFile('content.audio_file')) {
-                    // Hapus file audio lama jika ada
                     if ($exerciseDetail->audio_url) {
                         Storage::disk('public')->delete(str_replace('/storage/', '', $exerciseDetail->audio_url));
                     }
-                    // Simpan file baru
                     $path = $request->file('content.audio_file')->store('audio', 'public');
                     $contentData['audio_url'] = Storage::url($path);
                 }
                 unset($contentData['audio_file']);
-                // ----------------------------------------------------
 
                 $exerciseDetail->update($contentData);
             }
@@ -125,6 +216,17 @@ class ExerciseController extends Controller
     {
         DB::transaction(function () use ($exercise) {
             if ($exercise->exerciseable) {
+                // Jika ada file terkait (audio/gambar), hapus dari storage
+                if (isset($exercise->exerciseable->audio_url)) {
+                    Storage::disk('public')->delete(str_replace('/storage/', '', $exercise->exerciseable->audio_url));
+                }
+                if (isset($exercise->exerciseable->options)) {
+                    foreach ($exercise->exerciseable->options as $option) {
+                        if (Str::startsWith($option, '/storage')) {
+                            Storage::disk('public')->delete(str_replace('/storage/', '', $option));
+                        }
+                    }
+                }
                 $exercise->exerciseable->delete();
             }
             $exercise->delete();

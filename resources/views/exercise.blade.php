@@ -251,25 +251,33 @@
 
         function renderMultipleChoiceQuiz(content) {
             ui.checkButton.style.display = 'none';
+            const hasImageOptions = (content.options || []).some(opt => opt && (opt.startsWith('/storage/') || opt.startsWith('http')));
+
             ui.gameContainer.innerHTML = `
                 <div class="text-center">
                     <p class="text-gray-600 mb-6 text-xl">${content.question_text || 'Pilih jawaban yang benar:'}</p>
-                    <div id="options-container" class="flex flex-col gap-3">
-                        ${(content.options || []).map(opt => `<button class="option-button p-4 border-2 rounded-lg text-lg font-semibold" data-value="${opt}">${opt}</button>`).join('')}
+                    <div id="options-container" class="${hasImageOptions ? 'grid grid-cols-2 gap-4' : 'flex flex-col gap-3'}">
+                        ${(content.options || []).map(opt => {
+                            const isImage = opt && (opt.startsWith('/storage/') || opt.startsWith('http'));
+                            const fullUrl = isImage ? `${window.location.origin}${opt}` : '';
+                            const buttonContent = isImage ? `<img src="${fullUrl}" alt="Opsi jawaban" class="w-full h-32 object-contain">` : opt;
+                            const paddingClass = isImage ? 'p-2' : 'p-4';
+                            return `<button class="option-button ${paddingClass} border-2 rounded-lg text-lg font-semibold flex items-center justify-center" data-value="${opt}">${buttonContent}</button>`;
+                        }).join('')}
                     </div>
                 </div>
             `;
 
             document.querySelectorAll('.option-button').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const isCorrect = checkAnswer(e.target.dataset.value, content.correct_answer);
+                    const isCorrect = checkAnswer(e.currentTarget.dataset.value, content.correct_answer);
                     document.querySelectorAll('.option-button').forEach(b => {
                         b.disabled = true;
-                        if (b.dataset.value.toLowerCase() === content.correct_answer.toLowerCase()) {
+                        if (checkAnswer(b.dataset.value, content.correct_answer)) {
                             b.classList.add('correct');
                         }
                     });
-                    if (!isCorrect) e.target.classList.add('incorrect');
+                    if (!isCorrect) e.currentTarget.classList.add('incorrect');
                     showFeedback(isCorrect);
                 });
             });
@@ -357,28 +365,34 @@
         }
 
         function renderTranslationMatch(content) {
-            ui.checkButton.style.display = 'none'; // Pengecekan instan
+            ui.checkButton.style.display = 'none';
+            const hasImageOptions = (content.options || []).some(opt => opt && (opt.startsWith('/storage/') || opt.startsWith('http')));
+
             ui.gameContainer.innerHTML = `
                 <div class="text-center">
                     <p class="text-gray-600 mb-2">Terjemahkan kata berikut:</p>
                     <h2 class="text-4xl font-bold text-gray-800 mb-8">${content.question_word}</h2>
-                    <div id="options-container" class="flex flex-col gap-3">
-                        ${(content.options || []).map(opt => `<button class="option-button p-4 border-2 rounded-lg text-lg transition-colors" data-value="${opt}">${opt}</button>`).join('')}
+                    <div id="options-container" class="${hasImageOptions ? 'grid grid-cols-2 gap-4' : 'flex flex-col gap-3'}">
+                        ${(content.options || []).map(opt => {
+                            const isImage = opt && (opt.startsWith('/storage/') || opt.startsWith('http'));
+                            const fullUrl = isImage ? `${window.location.origin}${opt}` : '';
+                            const buttonContent = isImage ? `<img src="${fullUrl}" alt="Opsi jawaban" class="w-full h-32 object-contain">` : opt;
+                            const paddingClass = isImage ? 'p-2' : 'p-4';
+                            return `<button class="option-button ${paddingClass} border-2 rounded-lg text-lg font-semibold flex items-center justify-center" data-value="${opt}">${buttonContent}</button>`;
+                        }).join('')}
                     </div>
                 </div>
             `;
             document.querySelectorAll('.option-button').forEach(btn => {
                 btn.addEventListener('click', e => {
-                    const isCorrect = checkAnswer(e.target.dataset.value, content.correct_answer);
+                    const isCorrect = checkAnswer(e.currentTarget.dataset.value, content.correct_answer);
                     document.querySelectorAll('.option-button').forEach(b => {
                         b.disabled = true;
                         if (checkAnswer(b.dataset.value, content.correct_answer)) {
                             b.classList.add('correct');
                         }
                     });
-                    if (!isCorrect) {
-                        e.target.classList.add('incorrect');
-                    }
+                    if (!isCorrect) e.currentTarget.classList.add('incorrect');
                     showFeedback(isCorrect);
                 });
             });
@@ -583,7 +597,8 @@
         }
 
         function renderFillWithOptions(content) {
-            ui.checkButton.style.display = 'none'; // Pengecekan instan
+            ui.checkButton.style.display = 'none';
+            const hasImageOptions = (content.options || []).some(opt => opt && (opt.startsWith('/storage/') || opt.startsWith('http')));
 
             ui.gameContainer.innerHTML = `
                 <div class="text-center">
@@ -593,24 +608,28 @@
                         <span class="text-gray-400 mx-2">_______</span>
                         <span>${(content.sentence_parts || ['', ''])[1] || ''}</span>
                     </div>
-                    <div id="options-container" class="flex flex-wrap justify-center gap-3">
-                        ${(content.options || []).map(opt => `<button class="option-button p-4 border-2 rounded-lg text-lg font-semibold" data-value="${opt}">${opt}</button>`).join('')}
+                    <div id="options-container" class="${hasImageOptions ? 'grid grid-cols-2 gap-4' : 'flex flex-wrap justify-center gap-3'}">
+                        ${(content.options || []).map(opt => {
+                            const isImage = opt && (opt.startsWith('/storage/') || opt.startsWith('http'));
+                            const fullUrl = isImage ? `${window.location.origin}${opt}` : '';
+                            const buttonContent = isImage ? `<img src="${fullUrl}" alt="Opsi jawaban" class="w-full h-32 object-contain">` : opt;
+                            const paddingClass = isImage ? 'p-2' : 'p-4';
+                            return `<button class="option-button ${paddingClass} border-2 rounded-lg text-lg font-semibold flex items-center justify-center" data-value="${opt}">${buttonContent}</button>`;
+                        }).join('')}
                     </div>
                 </div>
             `;
 
             document.querySelectorAll('.option-button').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const isCorrect = checkAnswer(e.target.dataset.value, content.correct_answer);
+                    const isCorrect = checkAnswer(e.currentTarget.dataset.value, content.correct_answer);
                     document.querySelectorAll('.option-button').forEach(b => {
                         b.disabled = true;
                         if (checkAnswer(b.dataset.value, content.correct_answer)) {
                             b.classList.add('correct');
                         }
                     });
-                    if (!isCorrect) {
-                        e.target.classList.add('incorrect');
-                    }
+                    if (!isCorrect) e.currentTarget.classList.add('incorrect');
                     showFeedback(isCorrect);
                 });
             });
