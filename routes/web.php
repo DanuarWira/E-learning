@@ -13,6 +13,8 @@ use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\ProgressController;
 use App\Http\Controllers\Supervisor\SpvDashboardController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\InstansiController;
+use App\Http\Controllers\UserController;
 use App\Http\Middleware\PreventOnboardingAfterCompletion;
 
 Route::get('/', function () {
@@ -28,7 +30,7 @@ Route::middleware(['auth', PreventOnboardingAfterCompletion::class])->group(func
     Route::post('/onboarding', [OnboardingController::class, 'process'])->name('onboarding.process');
 });
 
-Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::get('/register', [RegisterController::class, 'create'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
 
 Route::get('/modules/{module:slug}', [ModuleController::class, 'show'])
@@ -85,6 +87,10 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::resource('materials', MaterialController::class);
 
     Route::resource('exercises', ExerciseController::class);
+
+    Route::resource('instansis', InstansiController::class)->except(['show', 'create', 'edit']);
+
+    Route::resource('users', UserController::class)->except(['show', 'create', 'edit']);
 });
 
 Route::get('/cek-phpinfo', function () {

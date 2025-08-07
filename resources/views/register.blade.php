@@ -35,19 +35,22 @@
                     @enderror
                 </div>
                 <div class="relative">
-                    <label for="instansi" class="sr-only">Instansi</label>
-                    <select id="instansi" name="instansi" required class="appearance-none rounded-md relative block w-full px-3 py-3 border border-neutral-300 bg-white placeholder-neutral-500 text-neutral-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm">
+                    <label for="instansi_id" class="sr-only">Instansi</label>
+                    <select id="instansi_id" name="instansi_id" required class="appearance-none rounded-md relative block w-full px-3 py-3 border border-neutral-300 bg-white placeholder-neutral-500 text-neutral-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm">
                         <option value="" disabled selected>Pilih Instansi</option>
-                        <option value="Instansi A">Instansi A</option>
-                        <option value="Instansi B">Instansi B</option>
-                        <option value="Instansi C">Instansi C</option>
+                        {{-- PERBAIKAN: Gunakan $instansis dan $instansi --}}
+                        @foreach($instansis as $instansi)
+                        <option value="{{ $instansi->id }}" {{ old('instansi_id') == $instansi->id ? 'selected' : '' }}>
+                            {{ $instansi->name }}
+                        </option>
+                        @endforeach
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-700">
                         <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                             <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                         </svg>
                     </div>
-                    @error('instansi')
+                    @error('instansi_id')
                     <span class="text-red-500 text-sm">{{ $message }}</span>
                     @enderror
                 </div>

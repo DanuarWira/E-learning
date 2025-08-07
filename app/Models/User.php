@@ -20,7 +20,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'instansi',
+        'instansi_id',
         'email',
         'password',
         'role',
@@ -58,6 +58,11 @@ class User extends Authenticatable
     public function isSupervisor(): bool
     {
         return $this->role === 'supervisor';
+    }
+
+    public function instansi()
+    {
+        return $this->belongsTo(Instansi::class);
     }
 
     public function progress()

@@ -43,7 +43,24 @@
                     <span>Kelola Exercise</span>
                 </a>
             </li>
-            <!-- Tambahkan link lainnya di sini nanti -->
+            <li class="pt-4">
+                <span class="px-4 text-xs font-semibold uppercase text-neutral-500">Manajemen Institusi</span>
+            </li>
+            <li>
+                <a href="{{ route('superadmin.instansis.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('superadmin.instansis.*') ? 'bg-indigo-600 text-white font-semibold shadow-md' : 'hover:bg-neutral-100' }} transition-colors">
+                    <i class="fas fa-book fa-fw"></i>
+                    <span>Kelola Institusi</span>
+                </a>
+            </li>
+            <li class="pt-4">
+                <span class="px-4 text-xs font-semibold uppercase text-neutral-500">Manajemen Pengguna</span>
+            </li>
+            <li>
+                <a href="{{ route('superadmin.users.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('superadmin.users.*') ? 'bg-indigo-600 text-white font-semibold shadow-md' : 'hover:bg-neutral-100' }} transition-colors">
+                    <i class="fas fa-book fa-fw"></i>
+                    <span>Kelola pengguna</span>
+                </a>
+            </li>
         </ul>
     </nav>
     <div class="pt-4 border-t border-neutral-700">
