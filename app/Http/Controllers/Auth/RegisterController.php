@@ -31,10 +31,9 @@ class RegisterController extends Controller
      */
     public function register(Request $request)
     {
-        // 1. Validasi data input
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'instansi_id' => ['required', 'exists:institutes,id'],
+            'instansi_id' => ['required', 'exists:instansis,id'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'terms' => ['accepted'],
@@ -48,10 +47,8 @@ class RegisterController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // 3. Login user yang baru dibuat
         Auth::login($user);
 
-        // 4. Redirect ke halaman dashboard
         return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan login untuk melanjutkan.');
     }
 }
