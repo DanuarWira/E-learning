@@ -9,7 +9,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class ExerciseMultipleChoice extends Model
 {
     use HasFactory;
-    protected $fillable = ['question_text', 'options', 'correct_answer'];
+    protected $fillable = [
+        'question_text',
+        'question_media_url',
+        'question_media_type',
+        'options',
+        'correct_answer'
+    ];
     protected $casts = ['options' => 'array'];
 
     public function exercise(): MorphOne

@@ -82,7 +82,7 @@
         resetContentOnTypeChange() {
             const type = this.exercise.type;
             if (['multiple_choice_quiz', 'translation_match', 'fill_with_options'].includes(type)) {
-                this.exercise.content = { options: [{value: ''}], correct_answer: 0 };
+                this.exercise.content = { question_text: '', question_media_url: '', options: [{value: ''}], correct_answer: 0 };
             }
             else if (type === 'matching_game') { this.exercise.content = { instruction: '', pairs: [{item1: '', item2: ''}] }; }
             else if (type === 'silent_letter_hunt') { this.exercise.content = { sentence: '', words: [{word: '', silent_letter_index: 0}] }; }
@@ -234,12 +234,25 @@
                             <h3 class="text-lg font-medium text-neutral-800 mb-2">Konten Latihan</h3>
 
                             <div x-show="['multiple_choice_quiz', 'fill_with_options', 'translation_match'].includes(exercise.type)" class="space-y-4">
-
-                                <!-- Pertanyaan (jika ada) -->
                                 <div x-show="exercise.type === 'multiple_choice_quiz'">
                                     <label class="block text-sm font-medium">Teks Pertanyaan</label>
                                     <textarea name="content[question_text]" x-model="exercise.content.question_text" class="mt-1 block w-full border-neutral-300 rounded-md"></textarea>
                                 </div>
+                                <label class="block text-xs font-medium text-gray-600 mt-3">Atau Media Pertanyaan (Gambar/Audio/Video)</label>
+                                <input type="file" name="content[question_media]" accept="image/*,audio/*,video/mp4" class="input-file w-full mt-1">
+                                <template x-if="isEditMode && exercise.content.question_media_url">
+                                    <div class="mt-2">
+                                        <template x-if="exercise.content.question_media_type === 'image'">
+                                            <img :src="`${window.location.origin}${exercise.content.question_media_url}`" class="w-24 h-24 object-cover rounded">
+                                        </template>
+                                        <template x-if="exercise.content.question_media_type === 'audio'">
+                                            <audio :src="`${window.location.origin}${exercise.content.question_media_url}`" controls class="w-full"></audio>
+                                        </template>
+                                        <template x-if="exercise.content.question_media_type === 'video'">
+                                            <video :src="`${window.location.origin}${exercise.content.question_media_url}`" controls class="w-full rounded"></video>
+                                        </template>
+                                    </div>
+                                </template>
                                 <div x-show="exercise.type === 'translation_match'">
                                     <label class="block text-sm font-medium">Kata/Frasa Pertanyaan</label>
                                     <input type="text" name="content[question_word]" x-model="exercise.content.question_word" class="mt-1 block w-full border-neutral-300 rounded-md">
@@ -250,7 +263,6 @@
                                     <input type="text" name="content[sentence_parts][]" x-model="exercise.content.sentence_parts[1]" placeholder="Bagian setelah jawaban" class="w-full rounded-md border-neutral-300">
                                 </div>
 
-                                <!-- Opsi Jawaban (Teks atau Gambar) -->
                                 <div>
                                     <label class="block text-sm font-medium mb-1">Opsi Jawaban (Pilih satu sebagai jawaban benar)</label>
                                     <template x-for="(option, index) in exercise.content.options" :key="index">

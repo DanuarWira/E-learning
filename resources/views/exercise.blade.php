@@ -253,8 +253,23 @@
             ui.checkButton.style.display = 'none';
             const hasImageOptions = (content.options || []).some(opt => opt && (opt.startsWith('/storage/') || opt.startsWith('http')));
 
+            let promptHTML = '';
+            if (content.question_media_url) {
+                const fullUrl = `${window.location.origin}${content.question_media_url}`;
+                if (content.question_media_type === 'image') {
+                    promptHTML = `<img src="${fullUrl}" alt="Prompt soal" class="mx-auto max-h-48 rounded-lg border shadow-sm mb-6">`;
+                } else if (content.question_media_type === 'audio') {
+                    promptHTML = `<button onclick="playAudio('${fullUrl}')" class="mb-6 text-indigo-600"><i class="fas fa-volume-up fa-3x"></i></button>`;
+                } else if (content.question_media_type === 'video') {
+                    promptHTML = `<video src="${fullUrl}" controls class="mx-auto w-full max-w-md rounded-lg border shadow-sm mb-6"></video>`;
+                }
+            } else if (content.question_text) {
+                promptHTML = `<p class="text-gray-600 mb-6 text-xl">${content.question_text}</p>`;
+            }
+
             ui.gameContainer.innerHTML = `
                 <div class="text-center">
+                    ${promptHTML}
                     <p class="text-gray-600 mb-6 text-xl">${content.question_text || 'Pilih jawaban yang benar:'}</p>
                     <div id="options-container" class="${hasImageOptions ? 'grid grid-cols-2 gap-4' : 'flex flex-col gap-3'}">
                         ${(content.options || []).map(opt => {

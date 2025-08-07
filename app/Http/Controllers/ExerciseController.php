@@ -93,6 +93,7 @@ class ExerciseController extends Controller
             'content.pairs.*.item2.audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
             'content.prompt_image' => ['nullable', 'file', 'image', 'max:2048'],
             'content.prompt_audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg', 'max:5120'],
+            'content.question_media' => ['nullable', 'file', 'mimes:jpeg,png,jpg,gif,mp3,wav,ogg,mp4', 'max:10240'],
         ]);
 
         DB::transaction(function () use ($validated, $request) {
@@ -111,6 +112,22 @@ class ExerciseController extends Controller
                 }
                 $contentData['options'] = $finalOptions;
             }
+
+            if (in_array($validated['type'], ['multiple_choice_quiz', 'translation_match', 'fill_with_options']) && $request->hasFile("content.question_media")) {
+                $file = $request->file("content.question_media");
+                $path = $file->store('mcq_prompts', 'public');
+                $contentData['question_media_url'] = Storage::url($path);
+
+                $mime = $file->getMimeType();
+                if (Str::startsWith($mime, 'image/')) {
+                    $contentData['question_media_type'] = 'image';
+                } elseif (Str::startsWith($mime, 'audio/')) {
+                    $contentData['question_media_type'] = 'audio';
+                } elseif (Str::startsWith($mime, 'video/')) {
+                    $contentData['question_media_type'] = 'video';
+                }
+            }
+            unset($contentData['question_media']);
 
             if ($validated['type'] === 'matching_game' && isset($contentData['pairs'])) {
                 $finalPairs = [];
@@ -218,6 +235,7 @@ class ExerciseController extends Controller
             'content.pairs.*.item2.audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
             'content.prompt_image' => ['nullable', 'file', 'image', 'max:2048'],
             'content.prompt_audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg', 'max:5120'],
+            'content.question_media' => ['nullable', 'file', 'mimes:jpeg,png,jpg,gif,mp3,wav,ogg,mp4', 'max:10240'],
         ]);
 
         DB::transaction(function () use ($validated, $request, $exercise) {
@@ -267,12 +285,31 @@ class ExerciseController extends Controller
                 $contentData['pairs'] = $finalPairs;
             }
 
+            if (in_array($exercise->exerciseable_type, ['multiple_choice_quiz', 'translation_match', 'fill_with_options']) && $request->hasFile("content.question_media")) {
+                if ($exerciseDetail->question_media_url) {
+                    Storage::disk('public')->delete(str_replace('/storage/', '', $exerciseDetail->question_media_url));
+                }
+
+                $file = $request->file("content.question_media");
+                $path = $file->store('mcq_prompts', 'public');
+                $contentData['question_media_url'] = Storage::url($path);
+
+                $mime = $file->getMimeType();
+                if (Str::startsWith($mime, 'image/')) {
+                    $contentData['question_media_type'] = 'image';
+                } elseif (Str::startsWith($mime, 'audio/')) {
+                    $contentData['question_media_type'] = 'audio';
+                } elseif (Str::startsWith($mime, 'video/')) {
+                    $contentData['question_media_type'] = 'video';
+                }
+            }
+            unset($contentData['question_media']);
+
             if ($exercise->exerciseable_type === 'speaking_quiz') {
                 $hasNewImage = $request->hasFile("content.prompt_image");
                 $hasNewAudio = $request->hasFile("content.prompt_audio");
 
                 if ($hasNewImage || $hasNewAudio) {
-                    // Hapus file lama jika ada
                     if ($exerciseDetail->media_url) {
                         Storage::disk('public')->delete(str_replace('/storage/', '', $exerciseDetail->media_url));
                     }
