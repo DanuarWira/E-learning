@@ -68,15 +68,15 @@ class ExerciseController extends Controller
             'title' => 'required|string|max:255',
             'type' => 'required|string',
             'content' => 'required|array',
-            // Validasi untuk semua kemungkinan field di dalam 'content'
             'content.question_text' => 'nullable|string',
             'content.question_word' => 'nullable|string',
-            'content.correct_answer' => 'nullable|integer', // Menerima index dari radio button
+            'content.correct_answer' => 'nullable|integer',
             'content.prompt_text' => 'nullable|string',
             'content.sentence' => 'nullable|string',
             'content.instruction' => 'nullable|string',
             'content.sentence_parts' => 'nullable|array',
             'content.correct_answers' => 'nullable|array',
+            'content.hints' => 'nullable|string',
             'content.words' => 'nullable|array',
             'content.categories' => 'nullable|array',
             'content.steps' => 'nullable|array',
@@ -91,6 +91,8 @@ class ExerciseController extends Controller
             'content.pairs.*.item2.text' => 'nullable|string',
             'content.pairs.*.item2.image' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'content.pairs.*.item2.audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
+            'content.prompt_image' => ['nullable', 'file', 'image', 'max:2048'],
+            'content.prompt_audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg', 'max:5120'],
         ]);
 
         DB::transaction(function () use ($validated, $request) {
@@ -118,6 +120,19 @@ class ExerciseController extends Controller
                     $finalPairs[] = ['item1' => $item1Value, 'item2' => $item2Value];
                 }
                 $contentData['pairs'] = $finalPairs;
+            }
+
+            if ($validated['type'] === 'speaking_quiz') {
+                if ($request->hasFile("content.prompt_image")) {
+                    $path = $request->file("content.prompt_image")->store('speaking_prompts', 'public');
+                    $contentData['media_url'] = Storage::url($path);
+                    $contentData['media_type'] = 'image';
+                } elseif ($request->hasFile("content.prompt_audio")) {
+                    $path = $request->file("content.prompt_audio")->store('speaking_prompts', 'public');
+                    $contentData['media_url'] = Storage::url($path);
+                    $contentData['media_type'] = 'audio';
+                }
+                unset($contentData['prompt_image'], $contentData['prompt_audio']);
             }
 
             if (isset($contentData['correct_answer'])) {
@@ -178,11 +193,11 @@ class ExerciseController extends Controller
             'lesson_id' => 'required|exists:lessons,id',
             'title' => 'required|string|max:255',
             'content' => 'required|array',
-            // --- PERBAIKAN: Tambahkan validasi untuk semua field konten ---
             'content.question_text' => 'nullable|string',
             'content.question_word' => 'nullable|string',
             'content.correct_answer' => 'nullable|integer',
             'content.prompt_text' => 'nullable|string',
+            'content.hints' => 'nullable|string',
             'content.sentence' => 'nullable|string',
             'content.instruction' => 'nullable|string',
             'content.sentence_parts' => 'nullable|array',
@@ -201,6 +216,8 @@ class ExerciseController extends Controller
             'content.pairs.*.item2.text' => 'nullable|string',
             'content.pairs.*.item2.image' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'content.pairs.*.item2.audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg'],
+            'content.prompt_image' => ['nullable', 'file', 'image', 'max:2048'],
+            'content.prompt_audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg', 'max:5120'],
         ]);
 
         DB::transaction(function () use ($validated, $request, $exercise) {
@@ -248,6 +265,29 @@ class ExerciseController extends Controller
                     $finalPairs[] = ['item1' => $item1Value, 'item2' => $item2Value];
                 }
                 $contentData['pairs'] = $finalPairs;
+            }
+
+            if ($exercise->exerciseable_type === 'speaking_quiz') {
+                $hasNewImage = $request->hasFile("content.prompt_image");
+                $hasNewAudio = $request->hasFile("content.prompt_audio");
+
+                if ($hasNewImage || $hasNewAudio) {
+                    // Hapus file lama jika ada
+                    if ($exerciseDetail->media_url) {
+                        Storage::disk('public')->delete(str_replace('/storage/', '', $exerciseDetail->media_url));
+                    }
+
+                    if ($hasNewImage) {
+                        $path = $request->file("content.prompt_image")->store('speaking_prompts', 'public');
+                        $contentData['media_url'] = Storage::url($path);
+                        $contentData['media_type'] = 'image';
+                    } elseif ($hasNewAudio) {
+                        $path = $request->file("content.prompt_audio")->store('speaking_prompts', 'public');
+                        $contentData['media_url'] = Storage::url($path);
+                        $contentData['media_type'] = 'audio';
+                    }
+                }
+                unset($contentData['prompt_image'], $contentData['prompt_audio']);
             }
 
             if (isset($contentData['correct_answer'])) {

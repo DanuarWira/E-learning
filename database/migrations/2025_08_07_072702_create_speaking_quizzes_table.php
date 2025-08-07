@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('exercise_pronunciation_drills', function (Blueprint $table) {
+        Schema::create('exercise_speaking_quizzes', function (Blueprint $table) {
             $table->id();
-            $table->text('prompt_text'); // Kolom untuk menyimpan teks yang harus diucapkan
+            $table->string('media_url')->nullable();
+            $table->string('media_type')->nullable();
+            $table->text('hints')->nullable();
+            $table->text('prompt_text');
             $table->timestamps();
         });
     }
@@ -23,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('exercise_pronunciation_drills');
+        Schema::dropIfExists('speaking_quizzes');
     }
 };

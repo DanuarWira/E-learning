@@ -215,9 +215,6 @@
                 case 'matching_game':
                     renderMatchingGame(content);
                     break;
-                case 'pronunciation_drill':
-                    renderPronunciationDrill(content);
-                    break;
                 case 'translation_match':
                     renderTranslationMatch(content);
                     break;
@@ -241,6 +238,9 @@
                     break;
                 case 'fill_with_options':
                     renderFillWithOptions(content);
+                    break;
+                case 'speaking_quiz':
+                    renderSpeakingQuiz(content);
                     break;
                 default:
                     ui.gameContainer.innerHTML = `<p class="text-center text-red-500">Tipe latihan '${exercise.exerciseable_type}' belum diimplementasikan.</p>`;
@@ -323,15 +323,31 @@
             document.querySelectorAll('.match-item').forEach(btn => btn.addEventListener('click', selectMatchItem));
         }
 
-        function renderPronunciationDrill(content) {
-            ui.checkButton.style.display = 'none'; // Tombol periksa tidak dibutuhkan
+        function renderSpeakingQuiz(content) {
+            let promptHTML = '';
+            if (content.media_url) {
+                const fullUrl = `${window.location.origin}${content.media_url}`;
+                if (content.media_type === 'image') {
+                    promptHTML = `<img src="${fullUrl}" alt="Prompt" class="mx-auto max-h-48 rounded-lg border shadow-sm mb-6">`;
+                } else if (content.media_type === 'audio') {
+                    promptHTML = `<button onclick="playAudio('${fullUrl}')" class="mb-6 text-indigo-600"><i class="fas fa-volume-up fa-3x"></i></button>`;
+                }
+            }
+
+            const hintButtonHTML = content.hints ? `<button id="hint-button" class="mt-4 text-sm text-indigo-600 hover:underline">Tampilkan Hint</button>` : '';
+            const hintContainerHTML = content.hints ? `<div id="hint-container" class="hidden m-2 p-4 bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-lg">${content.hints}</div>` : '';
+
             ui.gameContainer.innerHTML = `
-                <div class="text-center">
-                    <p class="text-gray-600 mb-4">Tekan tombol untuk merekam, lalu ucapkan kalimat di bawah ini.</p>
-                    <p class="text-2xl font-semibold bg-white p-6 rounded-lg mb-6">${content.prompt_text}</p>
+                <div class="text-center items-center justify-center">
+                    <p class="text-gray-600 mb-4">Lihat/dengarkan prompt, lalu ucapkan jawaban Anda.</p>
+                    ${hintButtonHTML}
+                    ${hintContainerHTML}
+                    ${promptHTML}
+                    <div class="flex items-center justify-center my-4">
                     <button id="record-button" class="w-20 h-20 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-transform transform hover:scale-105">
                         <i id="record-icon" class="fas fa-microphone fa-2x"></i>
                     </button>
+                    </div>
                     <p id="transcript" class="mt-4 text-gray-500 min-h-[2em] italic"></p>
                 </div>
             `;
@@ -339,16 +355,36 @@
             const recordButton = document.getElementById('record-button');
             const recordIcon = document.getElementById('record-icon');
             const transcriptEl = document.getElementById('transcript');
-
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
             if (!SpeechRecognition) {
                 recordButton.disabled = true;
                 transcriptEl.textContent = 'Maaf, browser Anda tidak mendukung pengenalan suara.';
+                ui.checkButton.style.display = 'none';
                 return;
             }
 
+            if (content.hints) {
+                const hintButton = document.getElementById('hint-button');
+                const hintContainer = document.getElementById('hint-container');
+                hintButton.onclick = () => {
+                    hintContainer.classList.toggle('hidden');
+                    hintButton.style.display = 'none'; // Sembunyikan tombol setelah diklik
+                };
+            }
+
+            ui.checkButton.onclick = () => {
+                const userAnswer = transcriptEl.textContent.replace('Anda mengucapkan: ', '').replace(/"/g, '').trim();
+                if (!userAnswer || userAnswer === 'Mendengarkan...') {
+                    alert('Silakan rekam suara Anda terlebih dahulu.');
+                    return;
+                }
+                const isCorrect = checkAnswer(userAnswer, content.prompt_text);
+                showFeedback(isCorrect, `Jawaban benar: <strong>${content.prompt_text}</strong>`);
+            };
+
             const recognition = new SpeechRecognition();
-            recognition.lang = 'en-US'; // Sesuaikan jika bahasa lain
+            recognition.lang = 'en-US';
             recognition.interimResults = false;
 
             recordButton.addEventListener('click', () => {
@@ -368,9 +404,6 @@
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 transcriptEl.textContent = `Anda mengucapkan: "${transcript}"`;
-                const cleanTranscript = transcript.replace(/[.,!?]/g, '').toLowerCase().trim();
-                const cleanAnswer = content.prompt_text.replace(/[.,!?]/g, '').toLowerCase().trim();
-                showFeedback(cleanTranscript === cleanAnswer, `Jawaban benar: <strong>${content.prompt_text}</strong>`);
             };
 
             recognition.onend = () => {
@@ -379,7 +412,7 @@
             };
 
             recognition.onerror = (event) => {
-                transcriptEl.textContent = 'Error pengenalan suara: ' + event.error;
+                transcriptEl.textContent = 'Error: ' + event.error;
                 recordButton.classList.remove('is-recording');
                 recordIcon.className = 'fas fa-microphone fa-2x';
             };

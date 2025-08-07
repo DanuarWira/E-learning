@@ -11,6 +11,26 @@
         [x-cloak] {
             display: none !important;
         }
+
+        .input-file {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .input-file::file-selector-button {
+            margin-right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border-width: 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background-color: #f1f5f9;
+            color: #4338ca;
+        }
+
+        .input-file::file-selector-button:hover {
+            background-color: #e2e8f0;
+        }
     </style>
 </head>
 
@@ -28,25 +48,21 @@
                 this.isEditMode = true;
                 this.modalTitle = 'Edit Latihan';
                 this.formAction = `/superadmin/exercises/${existingExercise.id}`;
-                
-                // --- PERBAIKAN: Restrukturisasi objek exercise agar cocok dengan form ---
                 this.exercise = {
                     id: existingExercise.id,
                     lesson_id: existingExercise.lesson_id,
                     title: existingExercise.title,
-                    type: existingExercise.exerciseable_type, // Ambil tipe dari relasi
-                    content: JSON.parse(JSON.stringify(existingExercise.exerciseable)) // Ambil konten dari relasi
+                    type: existingExercise.exerciseable_type,
+                    content: JSON.parse(JSON.stringify(existingExercise.exerciseable))
                 };
-
-                if (this.exercise.content) {
-                    if (this.exercise.content.options) {
-                        const correctIndex = this.exercise.content.options.indexOf(this.exercise.content.correct_answer);
-                        this.exercise.content.correct_answer = correctIndex >= 0 ? correctIndex : 0;
-                        this.exercise.content.options = this.exercise.content.options.map(opt => ({ value: opt }));
-                    }
-                    if (this.exercise.content.pairs) {
-                        this.exercise.content.pairs = this.exercise.content.pairs.map(p => ({ item1: { value: p.item1 }, item2: { value: p.item2 } }));
-                    }
+                
+                if (this.exercise.content && this.exercise.content.options) {
+                    const correctIndex = this.exercise.content.options.indexOf(this.exercise.content.correct_answer);
+                    this.exercise.content.correct_answer = correctIndex >= 0 ? correctIndex : 0;
+                    this.exercise.content.options = this.exercise.content.options.map(opt => ({ value: opt }));
+                }
+                if (this.exercise.content && this.exercise.content.pairs) {
+                    this.exercise.content.pairs = this.exercise.content.pairs.map(p => ({ item1: { value: p.item1 }, item2: { value: p.item2 } }));
                 }
 
             } else {
@@ -69,13 +85,13 @@
                 this.exercise.content = { options: [{value: ''}], correct_answer: 0 };
             }
             else if (type === 'matching_game') { this.exercise.content = { instruction: '', pairs: [{item1: '', item2: ''}] }; }
-            else if (type === 'pronunciation_drill') { this.exercise.content = { prompt_text: '' }; }
             else if (type === 'silent_letter_hunt') { this.exercise.content = { sentence: '', words: [{word: '', silent_letter_index: 0}] }; }
             else if (type === 'spelling_quiz') { this.exercise.content = { audio_url: '', correct_answer: '' }; }
             else if (type === 'sound_sorting') { this.exercise.content = { categories: [{name: '', id: ''}], words: [{word: '', category_id: ''}] }; }
             else if (type === 'sentence_scramble') { this.exercise.content = { sentence: '' }; }
             else if (type === 'fill_multiple_blanks') { this.exercise.content = { sentence_parts: [''], correct_answers: [''] }; }
             else if (type === 'sequencing') { this.exercise.content = { steps: [''] }; }
+            else if (type === 'speaking_quiz') { this.exercise.content = { media_url: '', media_type: '', prompt_text: '' }; }
             else { this.exercise.content = {}; }
         },
         addItem(key) {
@@ -210,6 +226,7 @@
                                 <option value="fill_multiple_blanks">Fill Multiple Blanks</option>
                                 <option value="sequencing">Sequencing</option>
                                 <option value="fill_with_options">Fill With Options</option>
+                                <option value="speaking_quiz">Speaking Quiz</option>
                             </select>
                         </div>
 
@@ -297,13 +314,6 @@
                                         </div>
                                     </template>
                                     <button type="button" @click="addItem('pairs')" class="text-sm text-indigo-600">+ Tambah Pasangan</button>
-                                </div>
-                            </div>
-
-                            <div x-show="exercise.type === 'pronunciation_drill'" class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium">Teks untuk Diucapkan</label>
-                                    <textarea name="content[prompt_text]" x-model="exercise.content.prompt_text" class="mt-1 block w-full border-neutral-300 rounded-md" placeholder="Contoh: The quick brown fox jumps over the lazy dog."></textarea>
                                 </div>
                             </div>
 
@@ -403,6 +413,31 @@
                                         </div>
                                     </template>
                                     <button type="button" @click="addItem('steps')" class="text-sm text-indigo-600">+ Tambah Langkah</button>
+                                </div>
+                            </div>
+
+                            <div x-show="exercise.type === 'speaking_quiz'" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium">Gambar (Opsional)</label>
+                                    <input type="file" name="content[prompt_image]" accept="image/*" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                                    <template x-if="isEditMode && exercise.content.media_type === 'image'">
+                                        <img :src="`${window.location.origin}${exercise.content.media_url}`" class="w-24 h-24 object-cover mt-2 rounded">
+                                    </template>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium">Audio (Opsional)</label>
+                                    <input type="file" name="content[prompt_audio]" accept="audio/*" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                                    <template x-if="isEditMode && exercise.content.media_type === 'audio'">
+                                        <audio :src="`${window.location.origin}${exercise.content.media_url}`" controls class="w-full mt-2"></audio>
+                                    </template>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium">Hint (Opsional)</label>
+                                    <input type="text" name="content[hints]" x-model="exercise.content.hints" class="mt-1 block w-full border-neutral-300 rounded-md" placeholder="Tuliskan hint">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium">Jawaban Benar (Teks)</label>
+                                    <input type="text" name="content[prompt_text]" x-model="exercise.content.prompt_text" class="mt-1 block w-full border-neutral-300 rounded-md" placeholder="Tulis jawaban yang diharapkan">
                                 </div>
                             </div>
 

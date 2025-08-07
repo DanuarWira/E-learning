@@ -24,7 +24,6 @@ class AppServiceProvider extends ServiceProvider
         Relation::morphMap([
             'multiple_choice_quiz' => \App\Models\ExerciseMultipleChoice::class,
             'matching_game' => \App\Models\ExerciseMatchingGame::class,
-            'pronunciation_drill' => \App\Models\ExercisePronunciationDrill::class,
             'translation_match' => \App\Models\ExerciseTranslationMatch::class,
             'silent_letter_hunt' => \App\Models\ExerciseSilentLetterHunt::class,
             'spelling_quiz' => \App\Models\ExerciseSpellingQuiz::class,
@@ -33,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
             'fill_multiple_blanks' => \App\Models\ExerciseFillMultipleBlank::class,
             'sequencing' => \App\Models\ExerciseSequencing::class,
             'fill_with_options' => \App\Models\ExerciseFillWithOptions::class,
+            'speaking_quiz' => \App\Models\ExerciseSpeakingQuiz::class,
         ]);
     }
 }
