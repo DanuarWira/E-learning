@@ -31,8 +31,6 @@ $allItems = $material->items;
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-
-        /* Pastikan plugin @tailwindcss/aspect-ratio sudah terinstal untuk rasio video */
     </style>
 </head>
 
@@ -66,7 +64,6 @@ $allItems = $material->items;
 
             <div class="flex-1 flex flex-col items-center justify-center">
                 <div id="item-container" class="w-full max-w-2xl text-center">
-                    <!-- Konten Material akan dirender di sini oleh JavaScript -->
                 </div>
             </div>
 
