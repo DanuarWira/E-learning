@@ -40,6 +40,7 @@
 
             <!-- Profile Section -->
             <div class="flex items-center gap-4">
+                <button id="lang-switcher" class="px-3 py-1 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-full text-sm shrink-0">EN</button>
                 <p class="text-neutral-700">{{ Auth::user()->name ?? 'Guest' }}</p>
 
                 <!-- Wadah Relative untuk Dropdown -->
@@ -50,14 +51,15 @@
 
                     <!-- Dropdown Menu -->
                     <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100">Profil</a>
-                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100">Dashboard</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-translate="profile">Profil</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-translate="dashboard">Dashboard</a>
                         <div class="border-t border-neutral-200 my-1"></div>
 
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <a href="{{ route('logout') }}"
                                 class="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                                data-translate="logout"
                                 onclick="event.preventDefault(); this.closest('form').submit();">
                                 Logout
                             </a>
@@ -71,7 +73,7 @@
     <main class="container mx-auto px-6 py-8">
         <!-- Header Modul -->
         <div class="mb-8">
-            <a href="{{ route('dashboard') }}" class="text-sm text-indigo-600 hover:underline">&larr; Kembali ke Dashboard</a>
+            <a href="{{ url()->previous() }}" class="text-sm text-indigo-600 hover:underline" data-translate="backToDashboard">&larr; Kembali ke Dashboard</a>
             <h1 class="text-4xl font-bold text-neutral-800 mt-2">{{ $module->title }}</h1>
             <p class="text-neutral-600 mt-2">{{ $module->description }}</p>
         </div>
@@ -98,7 +100,7 @@
                                 </span>
                                 <div>
                                     <p class="text-lg font-semibold text-neutral-900">{{ $lesson->title }}</p>
-                                    <p class="text-sm text-neutral-500">Mulai pelajaran ini untuk melanjutkan.</p>
+                                    <p class="text-sm text-neutral-500" data-translate="startLesson">Mulai pelajaran ini untuk melanjutkan.</p>
                                 </div>
                             </div>
                             <i class="fas fa-chevron-right text-neutral-400"></i>
@@ -107,7 +109,7 @@
                     @endif
                 </li>
                 @empty
-                <li class="p-6 text-center text-neutral-500">
+                <li class="p-6 text-center text-neutral-500" data-translate="noLessons">
                     Belum ada pelajaran yang tersedia untuk modul ini.
                 </li>
                 @endforelse
@@ -116,22 +118,58 @@
     </main>
 
     <script>
-        // Ambil elemen yang dibutuhkan
         const profileButton = document.getElementById('profile-button');
         const dropdownMenu = document.getElementById('dropdown-menu');
+        const langSwitcher = document.getElementById('lang-switcher');
+        let currentLanguage = localStorage.getItem('userLanguage') || 'id';
 
-        // Tambahkan event listener untuk tombol profil
+        const translations = {
+            en: {
+                profile: 'Profile',
+                dashboard: 'Dashboard',
+                logout: 'Logout',
+                backToDashboard: '&larr; Back to Dashboard',
+                startLesson: 'Start this lesson to continue.',
+                noLessons: 'No lessons available for this module yet.'
+            },
+            id: {
+                profile: 'Profil',
+                dashboard: 'Dashboard',
+                logout: 'Logout',
+                backToDashboard: '&larr; Kembali ke Dashboard',
+                startLesson: 'Mulai pelajaran ini untuk melanjutkan.',
+                noLessons: 'Belum ada pelajaran yang tersedia untuk modul ini.'
+            }
+        };
+
+        function updateLanguage() {
+            const lang = translations[currentLanguage];
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.dataset.translate;
+                if (lang[key]) {
+                    el.innerHTML = lang[key];
+                }
+            });
+            langSwitcher.textContent = currentLanguage === 'id' ? 'EN' : 'ID';
+        }
+
+        langSwitcher.addEventListener('click', () => {
+            currentLanguage = currentLanguage === 'id' ? 'en' : 'id';
+            localStorage.setItem('userLanguage', currentLanguage);
+            updateLanguage();
+        });
+
         profileButton.addEventListener('click', () => {
-            // Toggle class 'hidden' untuk menampilkan/menyembunyikan dropdown
             dropdownMenu.classList.toggle('hidden');
         });
 
-        // Sembunyikan dropdown jika pengguna mengklik di luar area dropdown
         window.addEventListener('click', (event) => {
             if (!profileButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
                 dropdownMenu.classList.add('hidden');
             }
         });
+
+        document.addEventListener('DOMContentLoaded', updateLanguage);
     </script>
 </body>
 

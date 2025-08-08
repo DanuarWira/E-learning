@@ -31,6 +31,25 @@ $allItems = $material->items;
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+
+        .clickable-chunk {
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .clickable-chunk:hover {
+            color: #4f46e5;
+        }
+
+        .translation-chunk {
+            font-size: 0.95rem;
+            color: #4b5563;
+            margin-top: 0.25rem;
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 
@@ -40,7 +59,7 @@ $allItems = $material->items;
 
     <main class="flex flex-col md:flex-row h-screen antialiased">
         <aside class="w-full md:w-24 bg-white shadow-lg md:shadow-md flex md:flex-col items-center p-2 md:py-6 no-scrollbar shrink-0">
-            <a href="{{ route('lessons.show', $lesson) }}" class="hidden md:block mb-6 text-neutral-500 hover:text-indigo-600" title="Kembali ke Pelajaran">
+            <a href="{{ url()->previous() }}" class="hidden md:block mb-6 text-neutral-500 hover:text-indigo-600" title="Kembali ke Pelajaran">
                 <i class="fas fa-times fa-2x"></i>
             </a>
             <div id="side-navigation" class="flex flex-row md:flex-col items-center gap-2 md:gap-3 w-full no-scrollbar">
@@ -57,6 +76,7 @@ $allItems = $material->items;
                 <div class="w-full bg-neutral-200 rounded-full h-4">
                     <div id="progress-bar" class="bg-green-500 h-4 rounded-full transition-all duration-300" style="width: 0%;"></div>
                 </div>
+                <button id="lang-switcher" class="ml-4 px-3 py-1 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-full text-sm shrink-0">EN</button>
                 <a href="{{ route('lessons.show', $lesson) }}" class="md:hidden text-neutral-500 hover:text-indigo-600" title="Kembali ke Pelajaran">
                     <i class="fas fa-times fa-2x"></i>
                 </a>
@@ -83,6 +103,7 @@ $allItems = $material->items;
         const itemsDataElement = document.getElementById('material-data');
         const allItems = JSON.parse(itemsDataElement.dataset.items);
         let currentItemIndex = 0;
+        let currentLanguage = localStorage.getItem('userLanguage') || 'id';
 
         const ui = {
             itemContainer: document.getElementById('item-container'),
@@ -91,7 +112,23 @@ $allItems = $material->items;
             progressBar: document.getElementById('progress-bar'),
             itemCounter: document.getElementById('item-counter'),
             sideNavItems: document.querySelectorAll('.side-nav-item'),
-            footerContainer: document.querySelector('.border-t-2')
+            footerContainer: document.querySelector('.border-t-2'),
+            langSwitcher: document.getElementById('lang-switcher')
+        };
+
+        const translations = {
+            en: {
+                description: 'Description (click text for translation):',
+                previous: 'Previous',
+                next: 'Next',
+                finish: 'Finish',
+            },
+            id: {
+                description: 'Deskripsi (klik teks untuk terjemahan):',
+                previous: 'Sebelumnya',
+                next: 'Selanjutnya',
+                finish: 'Selesai',
+            }
         };
 
         function playAudio(url) {
@@ -110,6 +147,7 @@ $allItems = $material->items;
             const titleH2 = document.createElement('h2');
             titleH2.className = 'text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-800';
             titleH2.textContent = item.title;
+            ui.itemContainer.appendChild(titleH2);
 
             let mediaElement = null;
             if (item.media_url) {
@@ -136,6 +174,11 @@ $allItems = $material->items;
             const descriptionDiv = document.createElement('div');
             descriptionDiv.className = 'mt-8 p-4 sm:p-6 bg-white rounded-lg shadow-inner text-center';
 
+            const descriptionTitle = document.createElement('p');
+            descriptionTitle.className = 'text-base sm:text-lg text-neutral-500 mb-4';
+            descriptionTitle.id = 'description-title';
+            descriptionDiv.appendChild(descriptionTitle);
+
             const descriptionContent = document.createElement('p');
             descriptionContent.className = 'text-lg sm:text-xl text-neutral-700 leading-relaxed';
 
@@ -146,6 +189,7 @@ $allItems = $material->items;
                     const chunkDiv = document.createElement('span');
                     chunkDiv.textContent = desc.chunk + ' ';
                     chunkDiv.className = 'clickable-chunk';
+                    chunkDiv.title = 'Tekan untuk menampilkan terjemahan';
 
                     const translationDiv = document.createElement('span');
                     translationDiv.textContent = `(${desc.translation}) `;
@@ -182,12 +226,17 @@ $allItems = $material->items;
             ui.itemCounter.textContent = `${currentItemIndex + 1} / ${allItems.length}`;
             ui.prevButton.disabled = currentItemIndex === 0;
 
+            const lang = translations[currentLanguage];
+            document.getElementById('description-title').textContent = lang.description;
+            ui.prevButton.innerHTML = `<i class="fas fa-chevron-left mr-2"></i> ${lang.previous}`;
+
+
             if (currentItemIndex === allItems.length - 1) {
-                ui.nextButton.textContent = 'Selesai';
+                ui.nextButton.textContent = lang.finish;
                 ui.nextButton.classList.add('bg-green-600', 'hover:bg-green-700');
                 ui.nextButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
             } else {
-                ui.nextButton.innerHTML = 'Selanjutnya <i class="fas fa-chevron-right ml-2"></i>';
+                ui.nextButton.innerHTML = `${lang.next} <i class="fas fa-chevron-right ml-2"></i>`;
                 ui.nextButton.classList.remove('bg-green-600', 'hover:bg-green-700');
                 ui.nextButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
             }
@@ -202,6 +251,13 @@ $allItems = $material->items;
                 }
             });
         }
+
+        ui.langSwitcher.addEventListener('click', () => {
+            currentLanguage = currentLanguage === 'id' ? 'en' : 'id';
+            ui.langSwitcher.textContent = currentLanguage === 'id' ? 'EN' : 'ID';
+            localStorage.setItem('userLanguage', currentLanguage);
+            updateUI();
+        });
 
         ui.nextButton.addEventListener('click', () => {
             if (currentItemIndex < allItems.length - 1) {

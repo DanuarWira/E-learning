@@ -41,6 +41,7 @@
 
             <!-- Profile Section -->
             <div class="flex items-center gap-4">
+                <button id="lang-switcher" class="px-3 py-1 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-full text-sm shrink-0">EN</button>
                 <p class="text-neutral-700">{{ Auth::user()->name ?? 'Guest' }}</p>
 
                 <!-- Wadah Relative untuk Dropdown -->
@@ -51,8 +52,8 @@
 
                     <!-- Dropdown Menu -->
                     <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100">Profil</a>
-                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100">Dashboard</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-translate="profile">Profil</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-translate="dashboard">Dashboard</a>
                         <div class="border-t border-neutral-200 my-1"></div>
 
                         <!-- FORM LOGOUT DIMULAI DI SINI -->
@@ -60,6 +61,7 @@
                             @csrf
                             <a href="{{ route('logout') }}"
                                 class="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                                data-translate="logout"
                                 onclick="event.preventDefault(); this.closest('form').submit();">
                                 Logout
                             </a>
@@ -73,8 +75,8 @@
 
     <!-- Main Content -->
     <main class="container mx-auto px-6 py-8">
-        <h1 class="text-3xl font-bold text-neutral-800">Selamat Datang Kembali!</h1>
-        <p class="text-neutral-600 mt-2">Lanjutkan proses belajarmu dan capai targetmu.</p>
+        <h1 class="text-3xl font-bold text-neutral-800" data-translate="welcomeBack">Selamat Datang Kembali!</h1>
+        <p class="text-neutral-600 mt-2" data-translate="welcomeSubtitle">Lanjutkan proses belajarmu dan capai targetmu.</p>
 
         <!-- Placeholder untuk konten dasbor -->
         <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -87,7 +89,7 @@
                 </div>
                 <div class="mt-4 flex items-center justify-center gap-2 bg-neutral-200 text-neutral-500 text-center py-2 px-4 rounded-lg text-sm font-semibold">
                     <i class="fas fa-lock"></i>
-                    <span>Terkunci</span>
+                    <span data-translate="locked">Terkunci</span>
                 </div>
             </div>
             @else
@@ -99,7 +101,7 @@
                 </div>
                 <div class="px-6 pb-4">
                     <div class="flex justify-between mb-1">
-                        <span class="text-base font-medium text-neutral-700">Progress</span>
+                        <span class="text-base font-medium text-neutral-700" data-translate="progress">Progress</span>
                         <span class="text-sm font-medium text-neutral-700">{{ round($module->progress) }}%</span>
                     </div>
                     <div class="w-full bg-neutral-200 rounded-full h-2.5">
@@ -108,38 +110,81 @@
                 </div>
                 <div class="bg-neutral-50 p-4 border-t border-neutral-200 flex justify-between items-center">
                     <span class="text-sm text-neutral-500">
-                        <i class="fas fa-book-open mr-2"></i>{{ $module->lessons_count }} Pelajaran
+                        <i class="fas fa-book-open mr-2"></i>{{ $module->lessons_count }} <span data-translate="lessons">Pelajaran</span>
                     </span>
-                    <a href="{{ route('modules.show', $module) }}" class="bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition duration-300">Mulai Belajar</a>
+                    <a href="{{ route('modules.show', $module) }}" class="bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition duration-300" data-translate="startLearning">Mulai Belajar</a>
                 </div>
             </div>
             @endif
             @empty
-            <!-- Tampilkan pesan ini jika tidak ada modul yang ditemukan -->
             <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12">
-                <p class="text-neutral-500 text-lg">Oops! Sepertinya belum ada modul yang tersedia saat ini.</p>
+                <p class="text-neutral-500 text-lg" data-translate="noModules">Oops! Sepertinya belum ada modul yang tersedia saat ini.</p>
             </div>
             @endforelse
         </div>
     </main>
 
     <script>
-        // Ambil elemen yang dibutuhkan
         const profileButton = document.getElementById('profile-button');
         const dropdownMenu = document.getElementById('dropdown-menu');
+        const langSwitcher = document.getElementById('lang-switcher');
+        let currentLanguage = localStorage.getItem('userLanguage') || 'id';
 
-        // Tambahkan event listener untuk tombol profil
+        const translations = {
+            en: {
+                profile: 'Profile',
+                dashboard: 'Dashboard',
+                logout: 'Logout',
+                welcomeBack: 'Welcome Back!',
+                welcomeSubtitle: 'Continue your learning process and achieve your goals.',
+                locked: 'Locked',
+                progress: 'Progress',
+                lessons: 'Lessons',
+                startLearning: 'Start Learning',
+                noModules: 'Oops! It seems there are no modules available at the moment.'
+            },
+            id: {
+                profile: 'Profil',
+                dashboard: 'Dashboard',
+                logout: 'Logout',
+                welcomeBack: 'Selamat Datang Kembali!',
+                welcomeSubtitle: 'Lanjutkan proses belajarmu dan capai targetmu.',
+                locked: 'Terkunci',
+                progress: 'Progress',
+                lessons: 'Pelajaran',
+                startLearning: 'Mulai Belajar',
+                noModules: 'Oops! Sepertinya belum ada modul yang tersedia saat ini.'
+            }
+        };
+
+        function updateLanguage() {
+            const lang = translations[currentLanguage];
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.dataset.translate;
+                if (lang[key]) {
+                    el.innerHTML = lang[key];
+                }
+            });
+            langSwitcher.textContent = currentLanguage === 'id' ? 'EN' : 'ID';
+        }
+
+        langSwitcher.addEventListener('click', () => {
+            currentLanguage = currentLanguage === 'id' ? 'en' : 'id';
+            localStorage.setItem('userLanguage', currentLanguage);
+            updateLanguage();
+        });
+
         profileButton.addEventListener('click', () => {
-            // Toggle class 'hidden' untuk menampilkan/menyembunyikan dropdown
             dropdownMenu.classList.toggle('hidden');
         });
 
-        // Sembunyikan dropdown jika pengguna mengklik di luar area dropdown
         window.addEventListener('click', (event) => {
             if (!profileButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
                 dropdownMenu.classList.add('hidden');
             }
         });
+
+        document.addEventListener('DOMContentLoaded', updateLanguage);
     </script>
 
 </body>

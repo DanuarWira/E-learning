@@ -54,7 +54,10 @@ $allItems = $vocabulary->items;
         }
 
         .translation-chunk {
-            transition: opacity 0.3s ease;
+            font-size: 0.95rem;
+            padding-left: 1rem;
+            color: #4b5563;
+            margin-top: 0.25rem;
         }
 
         .hidden {
@@ -69,7 +72,7 @@ $allItems = $vocabulary->items;
 
     <main class="flex flex-col md:flex-row h-screen antialiased">
         <aside class="w-full md:w-24 bg-white shadow-lg md:shadow-md flex md:flex-col items-center p-2 md:py-6 no-scrollbar shrink-0">
-            <a href="{{ route('lessons.show', $lesson) }}" class="hidden md:block mb-6 text-neutral-500 hover:text-indigo-600" title="Kembali ke Pelajaran">
+            <a href="{{ url()->previous() }}" class="hidden md:block mb-6 text-neutral-500 hover:text-indigo-600" title="Kembali ke Pelajaran">
                 <i class="fas fa-times fa-2x"></i>
             </a>
 
@@ -87,6 +90,7 @@ $allItems = $vocabulary->items;
                 <div class="w-full bg-neutral-200 rounded-full h-4">
                     <div id="progress-bar" class="bg-green-500 h-4 rounded-full transition-all duration-300" style="width: 0%;"></div>
                 </div>
+                <button id="lang-switcher" class="ml-4 px-3 py-1 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-full text-sm shrink-0">EN</button>
                 <a href="{{ route('lessons.show', $lesson) }}" class="md:hidden text-neutral-500 hover:text-indigo-600" title="Kembali ke Pelajaran">
                     <i class="fas fa-times fa-2x"></i>
                 </a>
@@ -114,6 +118,7 @@ $allItems = $vocabulary->items;
         const lessonDataElement = document.getElementById('lesson-data');
         const allItems = JSON.parse(lessonDataElement.dataset.items);
         let currentItemIndex = 0;
+        let currentLanguage = localStorage.getItem('userLanguage') || 'id';
 
         const ui = {
             itemContainer: document.getElementById('item-container'),
@@ -122,7 +127,23 @@ $allItems = $vocabulary->items;
             progressBar: document.getElementById('progress-bar'),
             itemCounter: document.getElementById('item-counter'),
             sideNavItems: document.querySelectorAll('.side-nav-item'),
-            footerContainer: document.querySelector('.border-t-2')
+            footerContainer: document.querySelector('.border-t-2'),
+            langSwitcher: document.getElementById('lang-switcher')
+        };
+
+        const translations = {
+            en: {
+                description: 'Description (click text for translation):',
+                previous: 'Previous',
+                next: 'Next',
+                finish: 'Finish',
+            },
+            id: {
+                description: 'Deskripsi (klik teks untuk terjemahan):',
+                previous: 'Sebelumnya',
+                next: 'Selanjutnya',
+                finish: 'Selesai',
+            }
         };
 
         function playAudio(urlOrText) {
@@ -187,6 +208,8 @@ $allItems = $vocabulary->items;
 
             const detailsTitle = document.createElement('p');
             detailsTitle.className = 'text-base sm:text-lg text-neutral-500 mb-4';
+            detailsTitle.id = 'detail-title';
+            detailsDiv.appendChild(detailsTitle);
 
             const detailsContent = document.createElement('p');
             detailsContent.className = 'text-lg sm:text-xl text-neutral-700 leading-relaxed';
@@ -198,6 +221,7 @@ $allItems = $vocabulary->items;
                     const chunkSpan = document.createElement('span');
                     chunkSpan.textContent = detail.chunk + ' ';
                     chunkSpan.className = 'clickable-chunk';
+                    chunkSpan.title = 'Tekan untuk menampilkan terjemahan';
 
                     const translationSpan = document.createElement('span');
                     translationSpan.textContent = `(${detail.translation}) `;
@@ -234,12 +258,16 @@ $allItems = $vocabulary->items;
             ui.itemCounter.textContent = `${currentItemIndex + 1} / ${allItems.length}`;
             ui.prevButton.disabled = currentItemIndex === 0;
 
+            const lang = translations[currentLanguage];
+            document.getElementById('detail-title').textContent = lang.description;
+            ui.prevButton.innerHTML = `<i class="fas fa-chevron-left mr-2"></i> ${lang.previous}`;
+
             if (currentItemIndex === allItems.length - 1) {
-                ui.nextButton.textContent = 'Selesai';
+                ui.nextButton.textContent = lang.finish;
                 ui.nextButton.classList.add('bg-green-600', 'hover:bg-green-700');
                 ui.nextButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
             } else {
-                ui.nextButton.innerHTML = 'Selanjutnya <i class="fas fa-chevron-right ml-2"></i>';
+                ui.nextButton.innerHTML = `${lang.next} <i class="fas fa-chevron-right ml-2"></i>`;
                 ui.nextButton.classList.remove('bg-green-600', 'hover:bg-green-700');
                 ui.nextButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
             }
@@ -254,6 +282,14 @@ $allItems = $vocabulary->items;
                 }
             });
         }
+
+        ui.langSwitcher.addEventListener('click', () => {
+            currentLanguage = currentLanguage === 'id' ? 'en' : 'id';
+            ui.langSwitcher.textContent = currentLanguage === 'id' ? 'EN' : 'ID';
+            localStorage.setItem('userLanguage', currentLanguage);
+            updateUI();
+        });
+
         ui.nextButton.addEventListener('click', () => {
             if (currentItemIndex < allItems.length - 1) {
                 renderItem(currentItemIndex + 1);

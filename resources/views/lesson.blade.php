@@ -43,6 +43,7 @@
 
             <!-- Profile Section -->
             <div class="flex items-center gap-4">
+                <button id="lang-switcher" class="px-3 py-1 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-full text-sm shrink-0">EN</button>
                 <p class="text-neutral-700">{{ Auth::user()->name ?? 'Guest' }}</p>
 
                 <!-- Wadah Relative untuk Dropdown -->
@@ -53,8 +54,8 @@
 
                     <!-- Dropdown Menu -->
                     <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100">Profil</a>
-                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100">Dashboard</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-translate="profile">Profil</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-translate="dashboard">Dashboard</a>
                         <div class="border-t border-neutral-200 my-1"></div>
 
                         <!-- FORM LOGOUT DIMULAI DI SINI -->
@@ -62,6 +63,7 @@
                             @csrf
                             <a href="{{ route('logout') }}"
                                 class="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                                data-translate="logout"
                                 onclick="event.preventDefault(); this.closest('form').submit();">
                                 Logout
                             </a>
@@ -75,67 +77,69 @@
 
     <main class="container mx-auto px-6 py-8">
         <div class="mb-8">
-            <a href="{{ route('modules.show', $lesson->module) }}" class="text-sm text-indigo-600 hover:underline">&larr; Kembali ke Modul: {{ $lesson->module->title }}</a>
+            <a href="{{ url()->previous() }}" class="text-sm text-indigo-600 hover:underline" data-translate-prefix="backToModule">
+                &larr; Kembali ke Modul: {{ $lesson->module->title }}
+            </a>
             <h1 class="text-4xl font-bold text-neutral-800 mt-2">{{ $lesson->title }}</h1>
         </div>
 
         <!-- Bagian Kosakata -->
         <div>
-            <h2 class="text-2xl font-bold text-neutral-800 mb-4">Vocabulary and Phrases</h2>
+            <h2 class="text-2xl font-bold text-neutral-800 mb-4" data-translate="vocabularyTitle">Kosakata dan Frasa</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse ($lesson->vocabularies as $vocabulary_category)
                 <a href="{{ route('lessons.practice', ['lesson' => $lesson, 'vocabulary' => $vocabulary_category]) }}" class="block p-6 bg-white rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-transform duration-300">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-neutral-900">{{ $vocabulary_category->category }}</h3>
-                        <span class="text-sm font-medium text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">{{ count($vocabulary_category->items) }} kata</span>
+                        <span class="text-sm font-medium text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">{{ count($vocabulary_category->items) }} <span data-translate="words">kata</span></span>
                     </div>
-                    <p class="mt-2 text-sm text-neutral-600">Mulai belajar kosakata dalam kategori ini.</p>
+                    <p class="mt-2 text-sm text-neutral-600" data-translate="startLearningVocab">Mulai belajar kosakata dalam kategori ini.</p>
                     <div class="text-right mt-4 text-indigo-600 font-semibold">
-                        Mulai Latihan &rarr;
+                        <span data-translate="startPractice">Mulai Latihan</span> &rarr;
                     </div>
                 </a>
                 @empty
-                <p class="text-neutral-500 md:col-span-2 lg:col-span-3">Belum ada kosakata untuk pelajaran ini.</p>
+                <p class="text-neutral-500 md:col-span-2 lg:col-span-3" data-translate="noVocabulary">Belum ada kosakata untuk pelajaran ini.</p>
                 @endforelse
             </div>
         </div>
 
         <div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 mt-8">Materials</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 mt-8" data-translate="materialsTitle">Materi</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse ($lesson->materials as $material_category)
                 <a href="{{ route('lessons.material.show', ['lesson' => $lesson, 'material' => $material_category]) }}" class="block p-6 bg-white rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-transform duration-300">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-neutral-900">{{ $material_category->type }}</h3>
-                        <span class="text-sm font-medium text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">{{ count($material_category->items) }} Item</span>
+                        <span class="text-sm font-medium text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">{{ count($material_category->items) }} <span data-translate="items">Item</span></span>
                     </div>
-                    <p class="mt-2 text-sm text-neutral-600">Lihat materi dalam kategori ini.</p>
+                    <p class="mt-2 text-sm text-neutral-600" data-translate="viewMaterials">Lihat materi dalam kategori ini.</p>
                     <div class="text-right mt-4 text-indigo-600 font-semibold">
-                        Lihat Materi &rarr;
+                        <span data-translate="viewMaterial">Lihat Materi</span> &rarr;
                     </div>
                 </a>
                 @empty
-                <p class="text-neutral-500">Belum ada material untuk pelajaran ini.</p>
+                <p class="text-neutral-500" data-translate="noMaterials">Belum ada material untuk pelajaran ini.</p>
                 @endforelse
             </div>
         </div>
 
         <div>
-            <h2 class="text-2xl font-bold text-neutral-800 mb-4 mt-8">Exercises</h2>
+            <h2 class="text-2xl font-bold text-neutral-800 mb-4 mt-8" data-translate="exercisesTitle">Latihan</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @if($lesson->exercises->isNotEmpty())
                 <a href="{{ route('lessons.exercise.practice', $lesson) }}" class="block p-6 bg-white rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-transform duration-300">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-neutral-900">Latihan Terpadu</h3>
-                        <span class="text-sm font-medium text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">{{ count($lesson->exercises) }} Latihan</span>
+                        <h3 class="text-lg font-semibold text-neutral-900" data-translate="integratedExercises">Latihan Terpadu</h3>
+                        <span class="text-sm font-medium text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">{{ count($lesson->exercises) }} <span data-translate="exercises">Latihan</span></span>
                     </div>
-                    <p class="mt-2 text-sm text-neutral-600">Kerjakan semua latihan untuk pelajaran ini dalam satu sesi.</p>
+                    <p class="mt-2 text-sm text-neutral-600" data-translate="doAllExercises">Kerjakan semua latihan untuk pelajaran ini dalam satu sesi.</p>
                     <div class="text-right mt-4 text-indigo-600 font-semibold">
-                        Mulai Latihan &rarr;
+                        <span data-translate="startPractice">Mulai Latihan</span> &rarr;
                     </div>
                 </a>
                 @else
-                <p class="text-neutral-500">Belum ada latihan untuk pelajaran ini.</p>
+                <p class="text-neutral-500" data-translate="noExercises">Belum ada latihan untuk pelajaran ini.</p>
                 @endif
             </div>
 
@@ -144,22 +148,90 @@
 
     </main>
     <script>
-        // Ambil elemen yang dibutuhkan
         const profileButton = document.getElementById('profile-button');
         const dropdownMenu = document.getElementById('dropdown-menu');
+        const langSwitcher = document.getElementById('lang-switcher');
+        let currentLanguage = localStorage.getItem('userLanguage') || 'id';
 
-        // Tambahkan event listener untuk tombol profil
+        const translations = {
+            en: {
+                profile: 'Profile',
+                dashboard: 'Dashboard',
+                logout: 'Logout',
+                backToModule: '&larr; Back to Module: {{ $lesson->module->title }}',
+                vocabularyTitle: 'Vocabulary and Phrases',
+                words: 'words',
+                startLearningVocab: 'Start learning vocabulary in this category.',
+                startPractice: 'Start Practice',
+                noVocabulary: 'No vocabulary for this lesson yet.',
+                materialsTitle: 'Materials',
+                items: 'Items',
+                viewMaterials: 'View materials in this category.',
+                viewMaterial: 'View Material',
+                noMaterials: 'No materials for this lesson yet.',
+                exercisesTitle: 'Exercises',
+                integratedExercises: 'Integrated Exercises',
+                exercises: 'Exercises',
+                doAllExercises: 'Do all exercises for this lesson in one session.',
+                noExercises: 'No exercises for this lesson yet.'
+            },
+            id: {
+                profile: 'Profil',
+                dashboard: 'Dashboard',
+                logout: 'Logout',
+                backToModule: '&larr; Kembali ke Modul: {{ $lesson->module->title }}',
+                vocabularyTitle: 'Kosakata dan Frasa',
+                words: 'kata',
+                startLearningVocab: 'Mulai belajar kosakata dalam kategori ini.',
+                startPractice: 'Mulai Latihan',
+                noVocabulary: 'Belum ada kosakata untuk pelajaran ini.',
+                materialsTitle: 'Materi',
+                items: 'Item',
+                viewMaterials: 'Lihat materi dalam kategori ini.',
+                viewMaterial: 'Lihat Materi',
+                noMaterials: 'Belum ada material untuk pelajaran ini.',
+                exercisesTitle: 'Latihan',
+                integratedExercises: 'Latihan Terpadu',
+                exercises: 'Latihan',
+                doAllExercises: 'Kerjakan semua latihan untuk pelajaran ini dalam satu sesi.',
+                noExercises: 'Belum ada latihan untuk pelajaran ini.'
+            }
+        };
+
+        function updateLanguage() {
+            const lang = translations[currentLanguage];
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.dataset.translate;
+                if (lang[key]) {
+                    el.innerHTML = lang[key];
+                }
+            });
+            document.querySelectorAll('[data-translate-prefix]').forEach(el => {
+                const key = el.dataset.translatePrefix;
+                if (lang[key]) {
+                    el.innerHTML = lang[key];
+                }
+            });
+            langSwitcher.textContent = currentLanguage === 'id' ? 'EN' : 'ID';
+        }
+
+        langSwitcher.addEventListener('click', () => {
+            currentLanguage = currentLanguage === 'id' ? 'en' : 'id';
+            localStorage.setItem('userLanguage', currentLanguage);
+            updateLanguage();
+        });
+
         profileButton.addEventListener('click', () => {
-            // Toggle class 'hidden' untuk menampilkan/menyembunyikan dropdown
             dropdownMenu.classList.toggle('hidden');
         });
 
-        // Sembunyikan dropdown jika pengguna mengklik di luar area dropdown
         window.addEventListener('click', (event) => {
             if (!profileButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
                 dropdownMenu.classList.add('hidden');
             }
         });
+
+        document.addEventListener('DOMContentLoaded', updateLanguage);
     </script>
 </body>
 
