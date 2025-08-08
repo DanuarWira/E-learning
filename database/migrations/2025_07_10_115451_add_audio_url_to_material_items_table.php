@@ -8,7 +8,6 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('material_items', function (Blueprint $table) {
-            // Kolom baru KHUSUS untuk file audio opsional
             $table->string('media_url')->nullable()->after('description');
         });
     }

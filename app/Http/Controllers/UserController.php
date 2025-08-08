@@ -12,12 +12,8 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(): View
     {
-        // Ambil semua user kecuali superadmin yang sedang login, beserta relasi instansi
         $users = User::where('role', '!=', 'superadmin')
             ->with('instansi')
             ->latest()
@@ -28,9 +24,6 @@ class UserController extends Controller
         return view('superadmin.users.index', compact('users', 'instansis'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -52,9 +45,6 @@ class UserController extends Controller
         return redirect()->route('superadmin.users.index')->with('success', 'User berhasil dibuat.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, User $user)
     {
         $request->validate([
@@ -67,7 +57,6 @@ class UserController extends Controller
 
         $userData = $request->except('password', 'password_confirmation');
 
-        // Jika password diisi, hash dan update passwordnya
         if ($request->filled('password')) {
             $userData['password'] = Hash::make($request->password);
         }
@@ -77,12 +66,8 @@ class UserController extends Controller
         return redirect()->route('superadmin.users.index')->with('success', 'User berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(User $user)
     {
-        // Tambahan keamanan agar superadmin tidak bisa menghapus dirinya sendiri
         if ($user->role === 'superadmin') {
             return back()->with('error', 'Tidak dapat menghapus akun superadmin.');
         }

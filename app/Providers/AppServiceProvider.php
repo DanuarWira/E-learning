@@ -20,7 +20,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Daftarkan 'morph map' di sini
         Relation::morphMap([
             'multiple_choice_quiz' => \App\Models\ExerciseMultipleChoice::class,
             'matching_game' => \App\Models\ExerciseMatchingGame::class,

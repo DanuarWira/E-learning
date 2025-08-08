@@ -13,23 +13,15 @@ use Illuminate\Support\Facades\Auth;
 
 class LessonController extends Controller
 {
-    /**
-     * MENAMPILKAN HALAMAN DETAIL: Daftar kategori vocab, material, dll.
-     */
     public function show(Lesson $lesson): View
     {
-        // Kita hanya perlu memuat kategori vocabularies di sini.
         $lesson->load(['vocabularies']);
 
         return view('lesson', compact('lesson'));
     }
 
-    /**
-     * MENAMPILKAN HALAMAN LATIHAN: Tampilan seperti Duolingo.
-     */
     public function practice(Lesson $lesson, Vocabulary $vocabulary): View
     {
-        // Di sini, kita memuat 'items' dari KATEGORI TERTENTU yang dipilih.
         $vocabulary->load('items');
 
         return view('practice', compact('lesson', 'vocabulary'));
@@ -37,7 +29,6 @@ class LessonController extends Controller
 
     public function material(Lesson $lesson, Material $material): View
     {
-        // Di sini, kita memuat 'items' dari KATEGORI TERTENTU yang dipilih.
         $material->load('items');
 
         return view('material', compact('lesson', 'material'));
@@ -46,11 +37,11 @@ class LessonController extends Controller
     public function practiceExercises(Lesson $lesson): View
     {
         $exercises = $lesson->exercises()
-            ->with('exerciseable') // <-- Ini adalah baris kunci yang benar
+            ->with('exerciseable')
             ->orderBy('order')
             ->get();
 
-        return view('exercise', [ // <-- Anda mengembalikan view 'exercise'
+        return view('exercise', [
             'lesson' => $lesson,
             'exercises' => $exercises,
         ]);
@@ -59,7 +50,7 @@ class LessonController extends Controller
     public function index(): View
     {
         $lessons = Lesson::with('module')->latest()->paginate(10);
-        $modules = Module::orderBy('title')->get(); // Ambil modules untuk dropdown di modal
+        $modules = Module::orderBy('title')->get();
         return view('superadmin.lessons.index', compact('lessons', 'modules'));
     }
 
@@ -105,12 +96,10 @@ class LessonController extends Controller
 
     public function markAsComplete(Request $request, Lesson $lesson)
     {
-        // Catat progress untuk pengguna yang sedang login
         $lesson->progress()->updateOrCreate(
             ['user_id' => Auth::id()],
             []
         );
-        // Arahkan kembali ke halaman modul
         return redirect()->route('modules.show', $lesson->module)->with('success', 'Pelajaran Selesai!');
     }
 }

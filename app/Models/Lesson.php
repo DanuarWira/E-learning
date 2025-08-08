@@ -35,7 +35,6 @@ class Lesson extends Model
         $totalItems = 0;
         $completedItems = 0;
 
-        // Hitung progress untuk Vocabulary
         $vocabCategories = $this->vocabularies()->with('items')->get();
         foreach ($vocabCategories as $category) {
             $totalItems += $category->items->count();
@@ -45,10 +44,8 @@ class Lesson extends Model
                 ->count();
         }
 
-        // (Lakukan hal yang sama untuk Materials dan Exercises nanti)
-
         if ($totalItems === 0) {
-            return 0; // Hindari pembagian dengan nol
+            return 0;
         }
 
         return round(($completedItems / $totalItems) * 100);

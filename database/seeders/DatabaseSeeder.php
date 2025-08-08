@@ -14,15 +14,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // Panggil seeder spesifik untuk modul
         $this->call([
             VocabularySeeder::class,
-            // ExerciseSeeder::class,
             InstansiSeeder::class,
             UserSeeder::class
         ]);
-
-        // Anda bisa menambahkan seeder lain di sini jika ada
-        // \App\Models\User::factory(10)->create();
     }
 }

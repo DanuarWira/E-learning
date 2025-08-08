@@ -20,10 +20,9 @@ class ModuleController extends Controller
     public function show(Module $module): View
     {
         $user = Auth::user();
-        // Ambil semua lesson, diurutkan berdasarkan urutan yang benar
         $lessons = $module->lessons()->orderBy('order', 'asc')->get();
 
-        $previousLessonIsComplete = true; // Lesson pertama selalu tidak terkunci
+        $previousLessonIsComplete = true;
 
         foreach ($lessons as $lesson) {
             $lesson->is_locked = !$previousLessonIsComplete;
@@ -32,7 +31,6 @@ class ModuleController extends Controller
             }
         }
 
-        // Ganti relasi 'lessons' pada modul dengan koleksi yang sudah kita proses
         $module->setRelation('lessons', $lessons);
 
         return view('module', compact('module'));

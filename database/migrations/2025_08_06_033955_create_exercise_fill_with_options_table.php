@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('exercise_fill_with_options', function (Blueprint $table) {
             $table->id();
-            $table->json('sentence_parts'); // ["Part 1", "Part 2", ...]
-            $table->json('options');        // ["Option 1", "Option 2", ...]
+            $table->json('sentence_parts');
+            $table->json('options');
             $table->string('correct_answer');
             $table->timestamps();
         });

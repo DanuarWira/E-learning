@@ -13,7 +13,6 @@ class AdminDashboardController extends Controller
 {
     public function index(): View
     {
-        // Menghitung semua statistik yang dibutuhkan
         $stats = [
             'total_users' => User::where('role', 'user')->count(),
             'total_supervisors' => User::where('role', 'supervisor')->count(),
@@ -21,7 +20,6 @@ class AdminDashboardController extends Controller
             'total_modules' => Module::count(),
         ];
 
-        // Mengirim data statistik ke view
         return view('superadmin.dashboard', compact('stats'));
     }
 }

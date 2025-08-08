@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
-    /**
-     * Menampilkan halaman formulir registrasi.
-     */
+
     public function showRegistrationForm()
     {
         return view('register');
@@ -26,9 +24,6 @@ class RegisterController extends Controller
         return view('register', compact('instansis'));
     }
 
-    /**
-     * Menangani permintaan registrasi.
-     */
     public function register(Request $request)
     {
         $request->validate([
@@ -39,7 +34,6 @@ class RegisterController extends Controller
             'terms' => ['accepted'],
         ]);
 
-        // 2. Buat user baru
         $user = User::create([
             'name' => $request->name,
             'instansi_id' => $request->instansi_id,

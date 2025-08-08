@@ -15,12 +15,10 @@ class SpvDashboardController extends Controller
     {
         $supervisor = Auth::user();
 
-        // Ambil semua pengguna dengan role 'user' dari instansi yang sama
         $users = User::where('role', 'user')
             ->where('instansi', $supervisor->instansi)
             ->get();
 
-        // Hitung progress keseluruhan untuk setiap pengguna
         $users->each(function ($user) {
             $user->overall_progress = $user->getOverallProgress();
         });

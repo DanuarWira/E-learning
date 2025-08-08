@@ -8,7 +8,6 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('vocabulary_items', function (Blueprint $table) {
-            // Kolom baru untuk menyimpan path ke file audio/video
             $table->string('media_url')->nullable()->after('details');
         });
     }

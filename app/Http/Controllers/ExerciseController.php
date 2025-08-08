@@ -14,10 +14,6 @@ use Illuminate\Support\Str;
 
 class ExerciseController extends Controller
 {
-    /**
-     * Menampilkan satu halaman latihan interaktif.
-     * Parameter $lesson diambil dari URL, meskipun kita bisa mendapatkannya dari $exercise->lesson.
-     */
     public function show(Lesson $lesson, Exercise $exercise): View
     {
         if ($exercise->lesson_id !== $lesson->id) {
@@ -36,7 +32,6 @@ class ExerciseController extends Controller
 
     public function store(Request $request)
     {
-        // Membersihkan input file yang kosong sebelum validasi
         $content = $request->input('content', []);
         if (isset($content['options'])) {
             foreach ($content['options'] as $index => $option) {
@@ -174,12 +169,8 @@ class ExerciseController extends Controller
         return redirect()->route('superadmin.exercises.index')->with('success', 'Latihan berhasil dibuat.');
     }
 
-    /**
-     * Memperbarui exercise dari form modal.
-     */
     public function update(Request $request, Exercise $exercise)
     {
-        // Membersihkan input file yang kosong sebelum validasi
         $content = $request->input('content', []);
         if (isset($content['options'])) {
             foreach ($content['options'] as $index => $option) {
@@ -338,7 +329,6 @@ class ExerciseController extends Controller
             }
 
             if ($exerciseDetail) {
-                // ... logika update audio ...
                 if ($exercise->exerciseable_type === 'spelling_quiz' && $request->hasFile('content.audio_file')) {
                     if ($exerciseDetail->audio_url) {
                         Storage::disk('public')->delete(str_replace('/storage/', '', $exerciseDetail->audio_url));
@@ -355,14 +345,10 @@ class ExerciseController extends Controller
         return redirect()->route('superadmin.exercises.index')->with('success', 'Latihan berhasil diperbarui.');
     }
 
-    /**
-     * Menghapus exercise.
-     */
     public function destroy(Exercise $exercise)
     {
         DB::transaction(function () use ($exercise) {
             if ($exercise->exerciseable) {
-                // Jika ada file terkait (audio/gambar), hapus dari storage
                 if (isset($exercise->exerciseable->audio_url)) {
                     Storage::disk('public')->delete(str_replace('/storage/', '', $exercise->exerciseable->audio_url));
                 }

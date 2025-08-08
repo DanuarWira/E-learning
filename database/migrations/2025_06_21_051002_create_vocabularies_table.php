@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('lesson_id')->constrained()->onDelete('cascade');
 
-            // Untuk mengelompokkan kosakata, cth: "Sound Contrasts", "Hospitality Words"
             $table->string('category');
 
             $table->integer('order')->default(0);

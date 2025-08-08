@@ -8,7 +8,6 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Kolom ini akan melacak apakah pengguna sudah melewati halaman onboarding.
             $table->boolean('has_completed_onboarding')->default(false)->after('role');
         });
     }

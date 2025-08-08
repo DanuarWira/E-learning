@@ -10,7 +10,6 @@ return new class extends Migration {
         Schema::create('exercise_multiple_choices', function (Blueprint $table) {
             $table->id();
             $table->text('question_text')->nullable();
-            // Pilihan jawaban disimpan sebagai JSON di sini untuk kesederhanaan
             $table->json('options');
             $table->string('correct_answer');
             $table->timestamps();

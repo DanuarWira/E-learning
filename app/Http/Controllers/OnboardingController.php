@@ -15,22 +15,15 @@ use Carbon\Carbon;
 
 class OnboardingController extends Controller
 {
-    /**
-     * Menampilkan halaman pilihan untuk skip pre-learning.
-     */
     public function show(): View
     {
         return view('onboarding');
     }
 
-    /**
-     * Memproses pilihan pengguna dan mencatat progress jika perlu.
-     */
     public function process(Request $request)
     {
         $user = Auth::user();
 
-        // Jika pengguna memilih untuk skip
         if ($request->input('skip') == '1') {
             $preLearningModule = Module::where('slug', 'pre-learning')->first();
 
@@ -62,7 +55,6 @@ class OnboardingController extends Controller
         $user->has_completed_onboarding = true;
         $user->save();
 
-        // Setelah memproses, arahkan ke dasbor utama
         return redirect()->route('dashboard');
     }
 }

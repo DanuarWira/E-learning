@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('vocabulary_items', function (Blueprint $table) {
-            // Mengubah tipe kolom 'details' dari string menjadi JSON
             $table->json('details')->nullable()->change();
         });
     }

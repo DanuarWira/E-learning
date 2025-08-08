@@ -12,12 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Hapus kolom 'instansi' yang lama jika ada
             if (Schema::hasColumn('users', 'instansi')) {
                 $table->dropColumn('instansi');
             }
-
-            // PERBAIKAN: Pastikan 'constrained' merujuk ke tabel 'instansis'
             $table->foreignId('instansi_id')->nullable()->constrained('instansis')->onDelete('set null');
         });
     }

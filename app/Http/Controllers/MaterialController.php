@@ -13,9 +13,6 @@ use Illuminate\View\View;
 
 class MaterialController extends Controller
 {
-    /**
-     * Menampilkan halaman utama manajemen material.
-     */
     public function index(): View
     {
         $materials = Material::with(['lesson', 'items'])->orderBy('lesson_id')->paginate(10);
@@ -23,9 +20,6 @@ class MaterialController extends Controller
         return view('superadmin.materials.index', compact('materials', 'lessons'));
     }
 
-    /**
-     * Menyimpan data dari form modal.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -68,7 +62,6 @@ class MaterialController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $material) {
-            // PERBAIKAN: Menggunakan 'type' bukan 'category'
             $material->update($request->only('lesson_id', 'type'));
 
             $existingItemIds = collect($request->items)->pluck('id')->filter();
@@ -102,9 +95,6 @@ class MaterialController extends Controller
         return redirect()->route('superadmin.materials.index')->with('success', 'Material berhasil diperbarui.');
     }
 
-    /**
-     * Menghapus material.
-     */
     public function destroy(Material $material)
     {
         foreach ($material->items as $item) {

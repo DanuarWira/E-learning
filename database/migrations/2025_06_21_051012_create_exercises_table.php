@@ -11,10 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('lesson_id')->constrained()->onDelete('cascade');
             $table->string('title');
-
-            // Kolom Polymorphic: Ini akan menyimpan ID dan Tipe dari detail latihan
-            $table->morphs('exerciseable'); // Membuat exerciseable_id dan exerciseable_type
-
+            $table->morphs('exerciseable');
             $table->integer('order')->default(0);
             $table->timestamps();
         });

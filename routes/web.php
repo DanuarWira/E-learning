@@ -75,7 +75,6 @@ Route::middleware(['auth', 'role:supervisor'])->prefix('supervisor')->name('supe
 
 Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
 
-    // Rute untuk dasbor
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('modules', ModuleController::class);

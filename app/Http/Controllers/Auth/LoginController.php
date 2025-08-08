@@ -32,12 +32,10 @@ class LoginController extends Controller
             'password' => ['required'],
         ]);
 
-        // 2. Coba untuk mengotentikasi pengguna
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             $user = Auth::user();
 
-            // PERIKSA STATUS ONBOARDING
             $user = Auth::user();
             if ($user->role === 'superadmin') {
                 return redirect()->intended(route('superadmin.dashboard'));
@@ -48,12 +46,10 @@ class LoginController extends Controller
             if (!$user->has_completed_onboarding) {
                 return redirect()->route('onboarding.show');
             }
-            // Jika role lain, arahkan ke dasbor user biasa
+
             return redirect()->route('onboarding.show');
         }
 
-        // 4. Jika otentikasi gagal
-        // Kembalikan ke halaman login dengan pesan error
         return back()->withErrors([
             'email' => 'Email atau password yang Anda masukkan salah.',
         ])->onlyInput('email');
@@ -73,6 +69,6 @@ class LoginController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/login'); // Redirect ke halaman utama setelah logout
+        return redirect('/login');
     }
 }

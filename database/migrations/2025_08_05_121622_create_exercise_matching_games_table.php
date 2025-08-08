@@ -10,7 +10,6 @@ return new class extends Migration {
         Schema::create('exercise_matching_games', function (Blueprint $table) {
             $table->id();
             $table->text('instruction')->nullable();
-            // Pasangan jawaban disimpan sebagai JSON di sini
             $table->json('pairs');
             $table->timestamps();
         });

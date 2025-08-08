@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('exercise_sound_sortings', function (Blueprint $table) {
             $table->id();
-            $table->json('categories'); // [{name: '/r/ sound', id: 'r_sound'}, ...]
-            $table->json('words');      // [{word: 'room', category_id: 'r_sound'}, ...]
+            $table->json('categories');
+            $table->json('words');
             $table->timestamps();
         });
     }

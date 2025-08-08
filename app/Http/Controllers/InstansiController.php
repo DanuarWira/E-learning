@@ -31,7 +31,6 @@ class InstansiController extends Controller
 
     public function destroy(Instansi $instansi)
     {
-        // Periksa apakah ada user yang terkait sebelum menghapus
         if ($instansi->users()->count() > 0) {
             return back()->with('error', 'Tidak dapat menghapus instansi karena masih memiliki user terkait.');
         }

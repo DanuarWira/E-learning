@@ -25,12 +25,8 @@ class Module extends Model
         'is_published',
     ];
 
-    /**
-     * Mendefinisikan relasi "satu-ke-banyak": Satu Module memiliki banyak Lesson.
-     */
     public function lessons(): HasMany
     {
-        // 'foreign_key', 'local_key'
         return $this->hasMany(Lesson::class, 'module_id', 'id');
     }
 

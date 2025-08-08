@@ -10,8 +10,6 @@ class PreventOnboardingAfterCompletion
 {
     public function handle(Request $request, Closure $next)
     {
-        // Jika pengguna sudah login DAN sudah menyelesaikan onboarding,
-        // jangan biarkan mereka kembali ke halaman onboarding.
         if (Auth::check() && Auth::user()->has_completed_onboarding) {
             return redirect()->route('dashboard');
         }
